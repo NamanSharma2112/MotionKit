@@ -1,5 +1,6 @@
 import React from 'react'
 import { cn } from "./libs/utils"
+import BunnyIcon from './SvgIcon'
 
 const HeroBG = () => {
   return (
@@ -19,8 +20,9 @@ const HeroBG = () => {
         {/* Horizontal Line - matches the dashed grid style */}
       
 
-        <div className='p-10 bg-white/80 backdrop-blur-sm border border-neutral-300 text-neutral-600 rounded-xl shadow-sm'>
-           hero section
+        <div className='p-10 bg-white/80 backdrop-blur-sm border border-neutral-300 text-neutral-600 rounded-xl shadow-sm items-center justify-center flex flex-col gap-4'>
+        <BunnyIcon state="sleeping" />    
+       
         </div>
       </div>
     </div>

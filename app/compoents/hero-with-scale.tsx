@@ -1,6 +1,7 @@
 import React from 'react'
 import { cn } from "./libs/utils"
 import Edit from './Edit'
+import BunnyIcon from './SvgIcon'
 const Hero = () => {
   return (
     // Added a background color to the parent so the line is visible by contrast
@@ -15,6 +16,10 @@ const Hero = () => {
         <HorizontalLine className='absolute top-20 w-screen mx-auto' />
         <div className='p-10 size-full flex justify-center items-center'>
           <Edit />
+          <BunnyIcon state="sleeping" />    // z's float, ears sway, body breathes
+<BunnyIcon state="awake" />       // eyes snap open, ears perk
+<BunnyIcon state="surprised" />   // wide eyes
+<BunnyIcon state="success" /> 
         </div>
       </div>
     </div>
