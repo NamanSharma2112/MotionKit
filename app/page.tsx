@@ -4,6 +4,7 @@ import Hero from "./compoents/hero-with-scale";
 import HeroBG from "./compoents/Background";
 import BunnyMascot from "./compoents/SvgIcon";
 import BunnyIcon from "./compoents/SvgIcon";
+import SmoothButton from "./compoents/button";
 export default function Home() {
   const isLoading = false;
 
@@ -17,6 +18,7 @@ export default function Home() {
 
 // as a loading indicator:
 <BunnyIcon state={isLoading ? "sleeping" : "success"} size={24} color="rgba(200,184,154,0.7)" />
+<SmoothButton />
     </div>
   );
 }
