@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react'
 import { cn } from "./libs/utils"
 import Edit from './Edit'
