@@ -66,7 +66,7 @@ export default function SmoothButton() {
       `}</style>
 
       {/* Outer Wrapper */}
-      <div className="flex justify-center px-10 py-30">
+      <div className="flex justify-center p-4 w-full">
         
         {/* The Button */}
         <button

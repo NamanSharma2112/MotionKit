@@ -1,4 +1,6 @@
 import Image from "next/image";
+import fs from "fs";
+import path from "path";
 import TextScramble from "./compoents/TextScramble";
 import Hero from "./compoents/hero-with-scale";
 import HeroBG from "./compoents/Background";
@@ -7,6 +9,19 @@ import SmoothButton from "./compoents/button";
 import ComponentCard from "./compoents/ComponentCard";
 
 export default function Home() {
+  const readCode = (filename: string) => {
+    try {
+      return fs.readFileSync(path.join(process.cwd(), "app/compoents", filename), "utf8");
+    } catch (e) {
+      return "// Code not found";
+    }
+  };
+
+  const bunnyCode = readCode("BunnyIcon.tsx");
+  const textScrambleCode = readCode("TextScramble.tsx");
+  const buttonCode = readCode("button.tsx");
+  const heroCode = readCode("hero-with-scale.tsx");
+
   return (
     <main className="min-h-screen bg-white dark:bg-[#0a0a0a] font-sans selection:bg-neutral-200 dark:selection:bg-neutral-800">
       {/* Header Section */}
@@ -25,6 +40,7 @@ export default function Home() {
           <ComponentCard 
             title="Bunny Mascot" 
             description="Interactive animated SVG character with mouse tracking."
+            code={bunnyCode}
           >
             <div className="scale-75 w-full h-full flex items-center justify-center">
               <BunnyIcon />
@@ -34,6 +50,7 @@ export default function Home() {
           <ComponentCard 
             title="Text Scramble" 
             description="Cyberpunk-style text decoding animation effect."
+            code={textScrambleCode}
           >
             <div className="scale-75 w-full h-full flex items-center justify-center">
               <TextScramble text="Transaction processing..." delay={500} />
@@ -43,6 +60,7 @@ export default function Home() {
           <ComponentCard 
             title="Smooth Button" 
             description="Button with elegant hover states and click animations."
+            code={buttonCode}
           >
             <div className="flex items-center justify-center w-full h-full">
               <SmoothButton />
@@ -52,6 +70,7 @@ export default function Home() {
           <ComponentCard 
             title="Hero Scale" 
             description="Attention-grabbing hero section with scale-up entrance."
+            code={heroCode}
           >
             <div className="scale-[0.35] origin-center w-[250%] h-[250%] flex items-center justify-center pointer-events-none">
               <Hero />

@@ -42,7 +42,7 @@ export default function ParallaxTilt() {
     // THE PERSPECTIVE WRAPPER (Crucial!)
     <div 
       style={{ perspective: "1000px" }} 
-      className="flex items-center justify-center h-screen bg-zinc-950"
+      className="flex items-center justify-center w-full h-full"
     >
       <motion.div
         ref={ref}
@@ -53,12 +53,12 @@ export default function ParallaxTilt() {
           rotateY,
           transformStyle: "preserve-3d", // Allows children to have their own Z-depth
         }}
-        className="relative h-96 w-72 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 border border-white/20 shadow-2xl"
+        className="relative h-64 w-48 sm:h-96 sm:w-72 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 border border-white/20 shadow-2xl"
       >
         {/* Milestone 4: Add a parallax child later */}
         <div 
           style={{ transform: "translateZ(50px)" }}
-          className="absolute inset-4 grid place-content-center rounded-xl border border-white/10 bg-white/5 text-white font-bold text-2xl"
+          className="absolute inset-4 grid place-content-center rounded-xl border border-white/10 bg-white/5 text-white font-bold text-xl sm:text-2xl"
         >
           PARALLAX
         </div>

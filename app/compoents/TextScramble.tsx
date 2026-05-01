@@ -50,7 +50,7 @@ const BlurScramble = ({ text = "SYSTEM ONLINE", delay = 200 }) => {
         y: 0 
       }}
       transition={{ duration: 0.8, ease: "easeOut" }}
-     className="font-mono text-5xl font-bold text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+     className="font-mono text-3xl sm:text-5xl font-bold text-neutral-900 dark:text-white drop-shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
     >
       {displayText}
     </motion.h1>

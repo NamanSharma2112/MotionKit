@@ -4,24 +4,20 @@ import React from 'react'
 import { cn } from "./libs/utils"
 import Edit from './Edit'
 import BunnyIcon from './SvgIcon'
+
 const Hero = () => {
   return (
-    // Added a background color to the parent so the line is visible by contrast
-    <div className='relative h-screen w-full overflow-hidden bg-white [--pattern:var(--color-neutral-200)]'>
+    <div className='relative h-full w-full overflow-hidden bg-white dark:bg-[#0a0a0a] [--pattern:var(--color-neutral-200)] dark:[--pattern:var(--color-neutral-800)]'>
       
-      {/* 1. Added z-50 to ensure it's on top 
-          2. Ensure the gradient colors contrast with your background
-      */}
-      <div className='absolute inset-y-0 left-0 w-1 h-full bg-linear-to-b from-black to-neutral-800 z-50' />
+      {/* Gradient mask for the edges */}
+      <div className='absolute inset-y-0 left-0 w-8 h-full bg-linear-to-r from-white dark:from-[#0a0a0a] to-transparent z-10' />
+      <div className='absolute inset-y-0 right-0 w-8 h-full bg-linear-to-l from-white dark:from-[#0a0a0a] to-transparent z-10' />
       
-      <div className="max-w-7xl mx-auto w-full h-full flex items-center justify-center text-neutral-600">
-        <HorizontalLine className='absolute top-20 w-screen mx-auto' />
-        <div className='p-10 size-full flex justify-center items-center'>
+      <div className="max-w-7xl mx-auto w-full h-full flex items-center justify-center text-neutral-600 dark:text-neutral-400">
+        <HorizontalLine className='absolute top-20 w-full mx-auto' />
+        <div className='p-10 w-full h-full flex justify-center items-center gap-12'>
           <Edit />
-          <BunnyIcon state="sleeping" />    // z's float, ears sway, body breathes
-<BunnyIcon state="awake" />       // eyes snap open, ears perk
-<BunnyIcon state="surprised" />   // wide eyes
-<BunnyIcon state="success" /> 
+          <BunnyIcon state="sleeping" />
         </div>
       </div>
     </div>
@@ -31,8 +27,9 @@ const Hero = () => {
 export default Hero
 
 const HorizontalLine = ({className}: {className?:string}) => {
-return <div className={cn('w-10 h-150 bg-[repeating-linear-gradient(45deg,var(--pattern)_0,var(--pattern)_1px,transparent_1px,transparent_50%)] bg-size-[15px_15px] outline-2 outline-dashed outline-[var(--pattern)] ', className)}></div>}
-
+  return <div className={cn('w-full h-px bg-[repeating-linear-gradient(90deg,var(--pattern)_0,var(--pattern)_4px,transparent_4px,transparent_8px)]', className)}></div>
+}
 
 const VerticalLine = ({className}: {className?: string}) => {
-return <div className={cn('w-30 h-full bg-[repeating-linear-gradient(45deg,var(--pattern)_0,var(--pattern)_1px,transparent_1px,transparent_50%)] bg-size-[15px_15px] outline-2 outline-dashed outline-[var(--pattern)] ', className)}></div>}
+  return <div className={cn('w-px h-full bg-[repeating-linear-gradient(180deg,var(--pattern)_0,var(--pattern)_4px,transparent_4px,transparent_8px)]', className)}></div>
+}
