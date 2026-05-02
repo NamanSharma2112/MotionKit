@@ -1,42 +1,42 @@
 "use client";
 
-import React, { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import React, { useRef } from "react";
+import { motion, useInView, Variants } from "framer-motion";
 
 interface ScrollRevealProps {
   children: React.ReactNode;
-  direction?: 'up' | 'down' | 'left' | 'right';
+  direction?: "up" | "down" | "left" | "right";
   delay?: number;
 }
 
-export default function ScrollReveal({ 
-  children, 
-  direction = 'up', 
-  delay = 0 
+export default function ScrollReveal({
+  children,
+  direction = "up",
+  delay = 0,
 }: ScrollRevealProps) {
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: false, margin: "-50px" });
 
-  const variants = {
+  const variants: Variants = {
     hidden: {
       opacity: 0,
-      y: direction === 'up' ? 50 : direction === 'down' ? -50 : 0,
-      x: direction === 'left' ? 50 : direction === 'right' ? -50 : 0,
-      filter: 'blur(10px)',
-      scale: 0.95
+      y: direction === "up" ? 50 : direction === "down" ? -50 : 0,
+      x: direction === "left" ? 50 : direction === "right" ? -50 : 0,
+      filter: "blur(10px)",
+      scale: 0.95,
     },
     visible: {
       opacity: 1,
       y: 0,
       x: 0,
-      filter: 'blur(0px)',
+      filter: "blur(0px)",
       scale: 1,
       transition: {
         duration: 0.8,
         delay,
-        ease: [0.22, 1, 0.36, 1]
-      }
-    }
+        ease: "easeInOut",
+      },
+    },
   };
 
   return (
