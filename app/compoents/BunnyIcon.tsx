@@ -22,12 +22,12 @@ const MAX_TRAVEL = 1.2;                   // max pupil offset in SVG units
 // ── Ear animation variants ────────────────────────────────────────────────
 const earVariants = {
   sleeping:  { rotate: [0, 3, 0],     transition: { duration: 4, repeat: Infinity, ease: "easeInOut" as const } },
-  awake:     { rotate: [0, -8, -5],   transition: { duration: 0.4, ease: "easeOut" as const } },
+  awake:     { rotate: [0, -8, -6, -8], transition: { duration: 3, repeat: Infinity, ease: "easeInOut" as const } },
   surprised: { rotate: [0, -14, -10], transition: { duration: 0.3, ease: "easeOut" as const } },
 };
 const earRVariants = {
   sleeping:  { rotate: [0, -3, 0],   transition: { duration: 4, repeat: Infinity, ease: "easeInOut" as const } },
-  awake:     { rotate: [0, 8, 5],    transition: { duration: 0.4, ease: "easeOut" as const } },
+  awake:     { rotate: [0, 8, 6, 8], transition: { duration: 3, repeat: Infinity, ease: "easeInOut" as const } },
   surprised: { rotate: [0, 14, 10],  transition: { duration: 0.3, ease: "easeOut" as const } },
 };
 
@@ -53,6 +53,46 @@ function FloatingZ({ d, sw, delay, tx, ty, s }: typeof Z_DEFS[number]) {
       animate={{ opacity:[0,1,1,0], x:[0,tx], y:[0,ty], scale:[s[0],s[1]] }}
       transition={{ duration:3, delay, repeat:Infinity, ease:"easeOut", times:[0,0.1,0.8,1] }}
     />
+  );
+}
+
+// ── Confetti ──────────────────────────────────────────────────────────────
+const CONFETTI_COLORS = ["#FF3F8E", "#04C2C9", "#2E5BFF", "#FFB238", "#5CD65C"];
+const CONFETTI_COUNT = 12;
+
+function Confetti() {
+  const particles = Array.from({ length: CONFETTI_COUNT });
+  return (
+    <g transform="translate(20, 20)">
+      {particles.map((_, i) => {
+        const angle = (i / CONFETTI_COUNT) * Math.PI * 2 + (Math.random() - 0.5);
+        const distance = 20 + Math.random() * 30;
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance;
+        const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+        const size = 1 + Math.random() * 2;
+        
+        return (
+          <motion.circle
+            key={i}
+            r={size}
+            fill={color}
+            initial={{ x: 0, y: 0, opacity: 1, scale: 0 }}
+            animate={{ 
+              x, 
+              y, 
+              opacity: [1, 1, 0],
+              scale: [0, 1.2, 0.5],
+              rotate: Math.random() * 360
+            }}
+            transition={{ 
+              duration: 0.8 + Math.random() * 0.4, 
+              ease: "easeOut" as const
+            }}
+          />
+        );
+      })}
+    </g>
   );
 }
 
@@ -98,8 +138,8 @@ function Eyes({ emotion, pupil }: EyesProps) {
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}>
         {/* iris */}
-        <circle cx={EYE_L.x} cy={EYE_L.y} r={1.8} fill={fill} opacity={0.15} />
-        <circle cx={EYE_R.x} cy={EYE_R.y} r={1.8} fill={fill} opacity={0.15} />
+        <circle cx={EYE_L.x} cy={EYE_L.y} r={1.8} fill={fill} opacity={0} />
+        <circle cx={EYE_R.x} cy={EYE_R.y} r={1.8} fill={fill} opacity={0} />
         {/* pupils — offset by lerped pupil position */}
         <circle cx={EYE_L.x + pupil.x} cy={EYE_L.y + pupil.y} r={0.9} fill={fill} opacity={0.55} />
         <circle cx={EYE_R.x + pupil.x} cy={EYE_R.y + pupil.y} r={0.9} fill={fill} opacity={0.55} />
@@ -122,10 +162,12 @@ export default function BunnyIcon({
   color = "currentColor",
   className,
   forceEmotion,
-}: BunnyIconProps) {
+  trigger,
+}: BunnyIconProps & { trigger?: number }) {
   const [timeEmotion, setTimeEmotion] = useState<"sleeping" | "awake">(getTimeEmotion);
   const [emotion, setEmotion] = useState<Emotion>(forceEmotion ?? getTimeEmotion());
   const [isSurprised, setIsSurprised] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   // Pupil tracking state (raw target + lerped current)
   const pupilTarget  = useRef({ x: 0, y: 0 });
@@ -151,6 +193,13 @@ export default function BunnyIcon({
     if (forceEmotion) setEmotion(forceEmotion);
   }, [forceEmotion]);
 
+  // Sync trigger to click handler
+  useEffect(() => {
+    if (trigger && trigger > 0) {
+      handleClick();
+    }
+  }, [trigger]);
+
   // ── Click → surprised ────────────────────────────────────────────────────
   const handleClick = useCallback(() => {
     if (surpriseTimer.current) clearTimeout(surpriseTimer.current);
@@ -162,28 +211,33 @@ export default function BunnyIcon({
     }, 1400);
   }, [forceEmotion, timeEmotion]);
 
-  // ── Mouse tracking ────────────────────────────────────────────────────────
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (emotion !== "awake" || !svgRef.current) return;
-    const rect = svgRef.current.getBoundingClientRect();
-    const cx = rect.left + rect.width  / 2;
-    const cy = rect.top  + rect.height / 2;
-    const dx = e.clientX - cx;
-    const dy = e.clientY - cy;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const radius = Math.max(rect.width, 80);
-    const strength = Math.min(dist / radius, 1);
-    const svgScale = 40 / rect.width;
-    const rawX = dx * svgScale * strength;
-    const rawY = dy * svgScale * strength;
-    const angle = Math.atan2(rawY, rawX);
-    const mag   = Math.min(Math.sqrt(rawX * rawX + rawY * rawY), MAX_TRAVEL);
-    pupilTarget.current = { x: Math.cos(angle) * mag, y: Math.sin(angle) * mag };
-  }, [emotion]);
+  // ── Global Mouse tracking ──────────────────────────────────────────────────
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (emotion !== "awake" || !svgRef.current) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const cx = rect.left + rect.width  / 2;
+      const cy = rect.top  + rect.height / 2;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      // Increase tracking radius to follow throughout the page
+      const radius = 1000; 
+      const strength = Math.min(dist / radius, 1);
+      
+      const svgScale = 40 / rect.width;
+      const rawX = dx * svgScale * strength;
+      const rawY = dy * svgScale * strength;
+      const angle = Math.atan2(rawY, rawX);
+      const mag   = Math.min(Math.sqrt(rawX * rawX + rawY * rawY), MAX_TRAVEL);
+      
+      pupilTarget.current = { x: Math.cos(angle) * mag, y: Math.sin(angle) * mag };
+    };
 
-  const handleMouseLeave = useCallback(() => {
-    pupilTarget.current = { x: 0, y: 0 };
-  }, []);
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+  }, [emotion]);
 
   // ── Lerp pupils on RAF ────────────────────────────────────────────────────
   useAnimationFrame(() => {
@@ -195,8 +249,26 @@ export default function BunnyIcon({
   });
 
   const sleeping = emotion === "sleeping";
-  const earE  = earVariants[emotion];
-  const earRE = earRVariants[emotion];
+  
+  // Custom variants that account for hover
+  const currentEarVariants = {
+    ...earVariants,
+    awake: isHovered 
+      ? { rotate: [0, -12, -8, -12], transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" as const } }
+      : earVariants.awake,
+    surprised: { rotate: [0, -25, -15], transition: { duration: 0.2, ease: "backOut" as const } }
+  };
+
+  const currentEarRVariants = {
+    ...earRVariants,
+    awake: isHovered 
+      ? { rotate: [0, 12, 8, 12], transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" as const } }
+      : earRVariants.awake,
+    surprised: { rotate: [0, 25, 15], transition: { duration: 0.2, ease: "backOut" as const } }
+  };
+
+  const earE  = currentEarVariants[emotion];
+  const earRE = currentEarRVariants[emotion];
   const bodyE = bodyVariants[emotion];
 
   return (
@@ -208,11 +280,14 @@ export default function BunnyIcon({
       className={className}
       style={{ overflow: "visible", color, cursor: "pointer" }}
       onClick={handleClick}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       key={emotion}
       animate={bodyE}
     >
+      <AnimatePresence>
+        {isSurprised && <Confetti key="confetti" />}
+      </AnimatePresence>
       <g transform="translate(6, 8)">
         {/* ── Left ear ── */}
         <motion.g transform="rotate(-15,7,10) translate(0,1)"

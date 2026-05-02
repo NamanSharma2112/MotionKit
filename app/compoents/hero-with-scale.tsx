@@ -5,9 +5,25 @@ import { cn } from "./libs/utils"
 import Edit from './Edit'
 import BunnyIcon from './SvgIcon'
 
-const Hero = () => {
+import { motion } from 'framer-motion'
+
+const Hero = ({ trigger }: { trigger?: number }) => {
+  const [key, setKey] = React.useState(0);
+
+  React.useEffect(() => {
+    if (trigger && trigger > 0) {
+      setKey(prev => prev + 1);
+    }
+  }, [trigger]);
+
   return (
-    <div className='relative h-full w-full overflow-hidden bg-white dark:bg-[#0a0a0a] [--pattern:var(--color-neutral-200)] dark:[--pattern:var(--color-neutral-800)]'>
+    <motion.div 
+      key={key}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className='relative h-full w-full overflow-hidden bg-white dark:bg-[#0a0a0a] [--pattern:var(--color-neutral-200)] dark:[--pattern:var(--color-neutral-800)]'
+    >
       
       {/* Gradient mask for the edges */}
       <div className='absolute inset-y-0 left-0 w-8 h-full bg-linear-to-r from-white dark:from-[#0a0a0a] to-transparent z-10' />
@@ -20,7 +36,7 @@ const Hero = () => {
           <BunnyIcon state="sleeping" />
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
