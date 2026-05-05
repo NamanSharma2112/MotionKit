@@ -1,5 +1,17 @@
 # MotionKit
 
+
+https://github.com/user-attachments/assets/3b8f7188-6380-4c8c-9b89-3109fd123367
+
+
+
+
+
+
+
+
+
+
 **Production-ready animated React components you can copy, paste, and ship.**
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
