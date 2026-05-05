@@ -135,6 +135,7 @@ function NavIcon({
   const ref = useRef<HTMLDivElement>(null);
 
   const distance = useTransform(mouseX, (val) => {
+    if (val === 0) return Infinity;
     const bounds = ref.current?.getBoundingClientRect() ?? {
       x: 0,
       width: 0,
@@ -143,12 +144,12 @@ function NavIcon({
     return val - bounds.x - bounds.width / 2;
   });
 
-  const widthSync = useTransform(distance, [-150, 0, 150], [44, 64, 44]);
+  const widthSync = useTransform(distance, [-150, 0, 150], [44, 56, 44]);
 
   const width = useSpring(widthSync, {
     mass: 0.1,
-    stiffness: 150,
-    damping: 12,
+    stiffness: 200,
+    damping: 15,
   });
 
   const isExternal = item.path.startsWith("http");
@@ -157,7 +158,7 @@ function NavIcon({
     <motion.div
       ref={ref}
       style={{ width }}
-      className={`relative flex items-center justify-center aspect-square rounded-xl transition-colors ${isActive
+      className={`relative flex items-center justify-center aspect-square rounded-xl transition-colors duration-200 ease-out ${isActive
         ? "bg-neutral-900 text-white dark:bg-white dark:text-black"
         : "bg-white/50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
         } border border-white/20 dark:border-white/10`}
