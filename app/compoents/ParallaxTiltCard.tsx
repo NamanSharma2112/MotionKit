@@ -3,7 +3,15 @@
 import React, { useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate } from 'framer-motion';
 
-export default function ParallaxTiltCard({ trigger }: { trigger?: number }) {
+export default function ParallaxTiltCard({
+  trigger,
+  maxTilt = 17.5,
+  glare = true,
+}: {
+  trigger?: number;
+  maxTilt?: number;
+  glare?: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
 
   const x = useMotionValue(0);
@@ -12,8 +20,8 @@ export default function ParallaxTiltCard({ trigger }: { trigger?: number }) {
   const mouseXSpring = useSpring(x);
   const mouseYSpring = useSpring(y);
 
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["17.5deg", "-17.5deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-17.5deg", "17.5deg"]);
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], [`${maxTilt}deg`, `-${maxTilt}deg`]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], [`-${maxTilt}deg`, `${maxTilt}deg`]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!ref.current) return;
@@ -58,13 +66,15 @@ export default function ParallaxTiltCard({ trigger }: { trigger?: number }) {
         </div>
 
         {/* Glare effect */}
-        <motion.div 
-          style={{
-            transform: "translateZ(1px)",
-            background: useMotionTemplate`radial-gradient(circle at ${useTransform(mouseXSpring, [-0.5, 0.5], ["0%", "100%"])} ${useTransform(mouseYSpring, [-0.5, 0.5], ["0%", "100%"])}, rgba(255,255,255,0.25) 0%, transparent 80%)`,
-          }}
-          className="absolute inset-0 pointer-events-none rounded-[2rem]"
-        />
+        {glare && (
+          <motion.div
+            style={{
+              transform: "translateZ(1px)",
+              background: useMotionTemplate`radial-gradient(circle at ${useTransform(mouseXSpring, [-0.5, 0.5], ["0%", "100%"])} ${useTransform(mouseYSpring, [-0.5, 0.5], ["0%", "100%"])}, rgba(255,255,255,0.25) 0%, transparent 80%)`,
+            }}
+            className="absolute inset-0 pointer-events-none rounded-[2rem]"
+          />
+        )}
       </motion.div>
     </div>
   );

@@ -3,16 +3,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useInView, animate } from 'framer-motion';
 
-export default function AnimatedCounter({ trigger }: { trigger?: number }) {
+export default function AnimatedCounter({
+  trigger,
+  duration = 2.5,
+  target = 2500,
+}: {
+  trigger?: number;
+  duration?: number;
+  target?: number;
+}) {
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: false, margin: "-100px" });
-  const [count, setCount] = useState(0);
 
   const startAnimation = () => {
     const node = ref.current;
     if (node) {
-      animate(0, 2500, {
-        duration: 2.5,
+      animate(0, target, {
+        duration,
         ease: [0.22, 1, 0.36, 1],
         onUpdate(value) {
           node.textContent = Math.round(value).toLocaleString();

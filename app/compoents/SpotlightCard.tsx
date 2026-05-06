@@ -3,7 +3,13 @@
 import React, { useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring, useMotionTemplate } from 'framer-motion';
 
-export default function SpotlightCard({ trigger }: { trigger?: number }) {
+export default function SpotlightCard({
+  trigger,
+  spotlightSize = 400,
+}: {
+  trigger?: number;
+  spotlightSize?: number;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -14,7 +20,7 @@ export default function SpotlightCard({ trigger }: { trigger?: number }) {
     mouseY.set(clientY - top);
   };
 
-  const background = useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, rgba(59, 130, 246, 0.15), transparent 80%)`;
+  const background = useMotionTemplate`radial-gradient(${spotlightSize}px circle at ${mouseX}px ${mouseY}px, rgba(59, 130, 246, 0.15), transparent 80%)`;
 
   return (
     <div 

@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Image, Sun, Moon } from "lucide-react";
+import { Home, Image, Sun, Moon, Layers } from "lucide-react";
 
 type NavItem = {
   id: string;
@@ -31,6 +31,12 @@ const icons: NavItem[] = [
     label: "Backgrounds",
     path: "/background",
     icon: <Image size={20} />,
+  },
+  {
+    id: "shadow",
+    label: "Shadow Play",
+    path: "/shadow",
+    icon: <Layers size={20} />,
   },
   {
     id: "github",

@@ -3,7 +3,13 @@
 import React, { useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
-export default function MagneticButton({ trigger }: { trigger?: number }) {
+export default function MagneticButton({
+  trigger,
+  strength = 0.4,
+}: {
+  trigger?: number;
+  strength?: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -20,9 +26,6 @@ export default function MagneticButton({ trigger }: { trigger?: number }) {
     const { left, top, width, height } = ref.current.getBoundingClientRect();
     const centerX = left + width / 2;
     const centerY = top + height / 2;
-    
-    // Magnetic pull strength (0.5 means follow 50%)
-    const strength = 0.4;
     x.set((clientX - centerX) * strength);
     y.set((clientY - centerY) * strength);
   };

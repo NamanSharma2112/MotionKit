@@ -31,7 +31,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-white dark:bg-[#0a0a0a] transition-colors duration-300">
+      <body className="min-h-full flex flex-col bg-[var(--background)] transition-colors duration-300">
         <PageTransition>
           {children}
         </PageTransition>

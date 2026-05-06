@@ -5,7 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const words = ["Premium Animations", "Liquid Transitions", "Interactive UI", "Modern Design"];
 
-export default function Typewriter({ trigger }: { trigger?: number }) {
+export default function Typewriter({
+  trigger,
+  typeSpeed = 100,
+  pauseDuration = 2000,
+}: {
+  trigger?: number;
+  typeSpeed?: number;
+  pauseDuration?: number;
+}) {
   const [index, setIndex] = useState(0);
   const [subIndex, setSubIndex] = useState(0);
   const [reverse, setReverse] = useState(false);
@@ -28,7 +36,7 @@ export default function Typewriter({ trigger }: { trigger?: number }) {
       setTimeout(() => {
         setPause(false);
         setReverse(true);
-      }, 2000);
+      }, pauseDuration);
       return;
     }
 
@@ -40,10 +48,10 @@ export default function Typewriter({ trigger }: { trigger?: number }) {
 
     const timeout = setTimeout(() => {
       setSubIndex((prev) => prev + (reverse ? -1 : 1));
-    }, Math.max(reverse ? 50 : 100, parseInt((Math.random() * 200).toString())));
+    }, Math.max(reverse ? 40 : typeSpeed, parseInt((Math.random() * typeSpeed).toString())));
 
     return () => clearTimeout(timeout);
-  }, [subIndex, index, reverse, pause]);
+  }, [subIndex, index, reverse, pause, typeSpeed, pauseDuration]);
 
   return (
     <div className="flex items-center justify-center font-mono text-2xl font-black tracking-tighter text-neutral-900 dark:text-white">

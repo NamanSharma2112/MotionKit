@@ -10,7 +10,15 @@ const items = [
   { id: 4, title: "Motion Kit", color: "bg-indigo-500" },
 ];
 
-export default function StaggeredList({ trigger }: { trigger?: number }) {
+export default function StaggeredList({
+  trigger,
+  staggerDelay = 0.1,
+  direction = "up",
+}: {
+  trigger?: number;
+  staggerDelay?: number;
+  direction?: "up" | "down";
+}) {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
@@ -25,8 +33,8 @@ export default function StaggeredList({ trigger }: { trigger?: number }) {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
+        staggerChildren: staggerDelay,
+        delayChildren: 0.1,
       },
     },
   };
@@ -34,15 +42,15 @@ export default function StaggeredList({ trigger }: { trigger?: number }) {
   const item: Variants = {
     hidden: {
       opacity: 0,
-      x: -20,
-      filter: "blur(10px)",
+      y: direction === "up" ? 16 : -16,
+      filter: "blur(6px)",
     },
     show: {
       opacity: 1,
-      x: 0,
+      y: 0,
       filter: "blur(0px)",
       transition: {
-        type: "spring", // ✅ now correctly inferred
+        type: "spring",
         stiffness: 300,
         damping: 24,
       },
