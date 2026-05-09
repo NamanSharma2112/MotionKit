@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { editProfileCode } from "./compoents/EditProfileModalCode";
+import EditProfileModal from "./compoents/EditProfileModal";
 import TextScramble from "./compoents/TextScramble";
-import Hero from "./compoents/hero-with-scale";
 import BunnyIcon from "./compoents/BunnyIcon";
 import SmoothButton from "./compoents/button";
 import ComponentCard from "./compoents/ComponentCard";
@@ -12,16 +13,15 @@ import AnimatedCounter from "./compoents/AnimatedCounter";
 import ParallaxTiltCard from "./compoents/ParallaxTiltCard";
 import ScrollReveal from "./compoents/ScrollReveal";
 import Typewriter from "./compoents/Typewriter";
-import SpotlightCard from "./compoents/SpotlightCard";
 import TableOfContents, { TocSection } from "./compoents/TableOfContents";
 
 const tocSections: TocSection[] = [
+  { id: "section-forms",      label: "Forms & Modals" },
   { id: "section-animations", label: "Animations" },
   { id: "section-buttons",    label: "Buttons" },
   { id: "section-text",       label: "Text Effects" },
   { id: "section-cards",      label: "Cards" },
   { id: "section-scroll",     label: "Scroll" },
-  { id: "section-hero",       label: "Hero" },
   { id: "section-mascot",     label: "Mascot" },
 ];
 
@@ -100,9 +100,6 @@ export default function Home() {
   const [revealDir, setRevealDir]           = useState<"up"|"down"|"left"|"right">("up");
   const [revealDelay, setRevealDelay]       = useState(0.1);
 
-  /* Spotlight */
-  const [spotSize, setSpotSize]             = useState(250);
-
   /* Magnetic */
   const [magnetStrength, setMagnetStrength] = useState(0.4);
 
@@ -124,6 +121,22 @@ export default function Home() {
           </p>
           <div className="home-divider" />
         </header>
+
+        {/* ── Forms & Modals ── */}
+        <section id="section-forms" className="home-section">
+          <h2 className="section-label">Forms &amp; Modals</h2>
+          <div className="cards-grid">
+            <ComponentCard
+              title="Edit Profile"
+              description="A beautiful, responsive edit profile modal with an integrated preview."
+              code={editProfileCode}
+            >
+              <div className="flex items-center justify-center w-full h-full scale-[0.65] sm:scale-75 md:scale-[0.85] origin-center bg-transparent">
+                <EditProfileModal />
+              </div>
+            </ComponentCard>
+          </div>
+        </section>
 
         {/* ── Animations ── */}
         <section id="section-animations" className="home-section">
@@ -252,18 +265,6 @@ export default function Home() {
               <Toggle label="Glare" value={tiltGlare} onChange={setTiltGlare} />
             </Controls>
 
-            <ComponentCard
-              title="Spotlight Card"
-              description="Radial gradient spotlight tracks the cursor across the card surface — creates a premium, interactive feel."
-            >
-              <div className="w-full h-full">
-                <SpotlightCard spotlightSize={spotSize} />
-              </div>
-            </ComponentCard>
-            <Controls>
-              <Slider label="Spotlight size" min={100} max={500} step={10} value={spotSize} onChange={setSpotSize} />
-            </Controls>
-
           </div>
         </section>
 
@@ -292,23 +293,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Hero ── */}
-        <section id="section-hero" className="home-section">
-          <h2 className="section-label">Hero</h2>
-          <div className="cards-grid">
 
-            <ComponentCard
-              title="Hero Scale"
-              description="Full-screen hero that scales up from 0.8× to 1× on load — creates immediate depth and attention."
-              showAnimateButton
-            >
-              <div className="scale-[0.35] origin-center w-[250%] h-[250%] flex items-center justify-center">
-                <Hero />
-              </div>
-            </ComponentCard>
-
-          </div>
-        </section>
 
         {/* ── Mascot ── */}
         <section id="section-mascot" className="home-section">

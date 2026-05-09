@@ -10,7 +10,7 @@ export default function CSSPlaygroundPage() {
   const [blur, setBlur] = useState(0);
 
   return (
-    <main className="min-h-screen bg-neutral-50 dark:bg-[#0a0a0a] font-sans text-neutral-900 dark:text-white flex flex-col">
+    <main className="min-h-screen font-sans text-neutral-900 dark:text-white flex flex-col">
       <header className="w-full px-6 py-4 flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-[#0a0a0a]/50 backdrop-blur-md sticky top-0 z-50">
         <Link href="/" className="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors">
           &larr; Back to Home

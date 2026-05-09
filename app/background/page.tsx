@@ -313,7 +313,7 @@ export default function BackgroundPage() {
   }, [editorMode, activeType]);
 
   return (
-    <div className="min-h-screen p-6 sm:p-12 lg:p-20 flex flex-col items-center bg-white dark:bg-[#0a0a0a] transition-colors">
+    <div className="min-h-screen p-6 sm:p-12 lg:p-20 flex flex-col items-center transition-colors">
       {/* Header */}
       <header className="max-w-4xl w-full text-center mb-12">
         <motion.h1

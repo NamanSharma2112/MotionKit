@@ -286,6 +286,7 @@ export default function ShadowPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.05 }}
+            className="min-h-screen"
         >
             <main className="relative max-w-[900px] mx-auto px-8 pt-14 pb-0 text-zinc-800 dark:text-zinc-200 leading-[1.7] antialiased border-l border-r border-dashed border-zinc-200 dark:border-zinc-800">
                 {/* Header */}
