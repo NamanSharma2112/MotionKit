@@ -2,31 +2,30 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #fdfdfd;
-  --foreground: #171717;
+  --background: #ffffff;
+  --foreground: #111111;
+  --dot-color: rgba(0, 0, 0, 0.05);
+}
+
+:root.dark, .dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --dot-color: rgba(255, 255, 255, 0.1);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --background: #121212;
-    --foreground: #ededed;
-  }
-}
-
-.dark {
-  --background: #121212;
-  --foreground: #ededed;
+html {
+  background-color: var(--background);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+  background-size: 21px 21px;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
@@ -97,11 +96,7 @@ body {
   position: relative;
 }
 
-.custom-bg {
-  background-color: #0a0a0a;
-  background-image: radial-gradient(circle, #6b728066 1px, transparent 1px);
-  background-size: 21px 21px;
-}
+
 
 /* ── Sticky sidebar on the left ── */
 .home-sidebar {
@@ -118,8 +113,8 @@ body {
   align-items: center; /* Center the content instead of left-align to feel more balanced */
   padding-top: 64px;
   padding-bottom: 120px;
-  padding-left: max(32px, calc((100% - 760px) / 2));
-  padding-right: max(32px, calc((100% - 760px) / 2));
+  padding-left: max(32px, calc((100% - 1100px) / 2));
+  padding-right: max(32px, calc((100% - 1100px) / 2));
 }
 
 @media (max-width: 860px) {
@@ -130,7 +125,7 @@ body {
 /* ── Header ── */
 .home-header {
   width: 100%;
-  max-width: 760px;
+  max-width: 1100px;
   margin-bottom: 24px;
 }
 
@@ -152,7 +147,7 @@ body {
 .home-divider {
   height: 1px;
   width: 100%;
-  max-width: 760px;
+  max-width: 1100px;
   background: #e8e8e8;
   margin-top: 24px;
 }
@@ -162,7 +157,7 @@ body {
 /* ── Sections ── */
 .home-section {
   width: 100%;
-  max-width: 760px;
+  max-width: 1100px;
   margin-bottom: 32px;
   scroll-margin-top: 64px;
 }
@@ -186,8 +181,8 @@ body {
 /* ── Cards ── */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+  grid-template-columns: 1fr;
+  gap: 24px;
 }
 
 @media (max-width: 900px) {
@@ -199,7 +194,7 @@ body {
 /* ── Footer ── */
 .home-footer {
   width: 100%;
-  max-width: 760px;
+  max-width: 1100px;
   display: flex;
   flex-direction: column;
   gap: 8px;
