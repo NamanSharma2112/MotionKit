@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { editProfileCode } from "./compoents/EditProfileModalCode";
 import EditProfileModal from "./compoents/EditProfileModal";
+import Gooey from "./compoents/Gooey";
 import TextScramble from "./compoents/TextScramble";
 import BunnyIcon from "./compoents/BunnyIcon";
 import SmoothButton from "./compoents/button";
@@ -133,6 +134,15 @@ export default function Home() {
             >
               <div className="flex items-center justify-center w-full h-full scale-[0.65] sm:scale-75 md:scale-[0.85] origin-center bg-transparent">
                 <EditProfileModal />
+              </div>
+            </ComponentCard>
+
+            <ComponentCard
+              title="Gooey Search"
+              description="A slick search input with a gooey SVG filter effect."
+            >
+              <div className="flex items-center justify-center w-full h-full">
+                <Gooey />
               </div>
             </ComponentCard>
           </div>

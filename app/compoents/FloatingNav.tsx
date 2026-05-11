@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Image, Sun, Moon, Layers, PenTool } from "lucide-react";
+import { Home, Image, Sun, Moon, Layers, PenTool, LayoutDashboard } from "lucide-react";
 
 type NavItem = {
   id: string;
