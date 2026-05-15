@@ -14,6 +14,8 @@ import AnimatedCounter from "./compoents/AnimatedCounter";
 import ParallaxTiltCard from "./compoents/ParallaxTiltCard";
 import ScrollReveal from "./compoents/ScrollReveal";
 import Typewriter from "./compoents/Typewriter";
+import LetterSwap from "./compoents/LetterSwap";
+import SquigglyText from "./compoents/SquigglyText";
 import TableOfContents, { TocSection } from "./compoents/TableOfContents";
 
 const tocSections: TocSection[] = [
@@ -88,6 +90,16 @@ export default function Home() {
   /* Text Scramble */
   const [scrambleText, setScrambleText]     = useState("MotionKit");
   const [scrambleSpeed, setScrambleSpeed]   = useState(50);
+
+  /* Letter Swap */
+  const [swapInterval, setSwapInterval]     = useState(2500);
+  const [swapStiffness, setSwapStiffness]   = useState(120);
+  const [swapDamping, setSwapDamping]       = useState(18);
+
+  /* Squiggly Text */
+  const [squigglySpeed, setSquigglySpeed]       = useState(0.4);
+  const [squigglyScale, setSquigglyScale]       = useState(6);
+  const [squigglyFreq, setSquigglyFreq]         = useState(0.02);
 
   /* Typewriter */
   const [typeSpeed, setTypeSpeed]           = useState(80);
@@ -252,6 +264,48 @@ export default function Home() {
             <Controls>
               <Slider label="Type speed (ms)" min={20} max={200} step={10} value={typeSpeed} onChange={setTypeSpeed} />
               <Slider label="Pause (ms)" min={500} max={4000} step={500} value={typePause} onChange={setTypePause} />
+            </Controls>
+
+            <ComponentCard
+              title="Letter Swap"
+              description="Layout-animated word cycler — shared letters slide between positions using motion layoutId while unique ones fade in and out."
+            >
+              <div className="flex items-center justify-center w-full h-full">
+                <div style={{ fontSize: '3rem', color: 'white', fontFamily: 'var(--font-mono, monospace)' }}>
+                  <LetterSwap
+                    words={["Motion", "Design", "Create", "Morph!"]}
+                    interval={swapInterval}
+                    stiffness={swapStiffness}
+                    damping={swapDamping}
+                  />
+                </div>
+              </div>
+            </ComponentCard>
+            <Controls>
+              <Slider label="Interval (ms)" min={1000} max={5000} step={250} value={swapInterval} onChange={setSwapInterval} />
+              <Slider label="Stiffness" min={40} max={300} step={10} value={swapStiffness} onChange={setSwapStiffness} />
+              <Slider label="Damping" min={5} max={40} step={1} value={swapDamping} onChange={setSwapDamping} />
+            </Controls>
+
+            <ComponentCard
+              title="Squiggly Text"
+              description="Pure CSS + SVG wiggle effect — 5 feTurbulence filters with different seeds cycled via keyframes. No canvas or animation library needed."
+            >
+              <div className="flex items-center justify-center w-full h-full">
+                <div style={{ fontSize: '2.8rem', color: 'white' }}>
+                  <SquigglyText
+                    text="Wiggly!"
+                    speed={squigglySpeed}
+                    scale={squigglyScale}
+                    baseFrequency={squigglyFreq}
+                  />
+                </div>
+              </div>
+            </ComponentCard>
+            <Controls>
+              <Slider label="Speed (s)" min={0.1} max={1.5} step={0.1} value={squigglySpeed} onChange={setSquigglySpeed} />
+              <Slider label="Scale" min={1} max={20} step={1} value={squigglyScale} onChange={setSquigglyScale} />
+              <Slider label="Frequency" min={0.005} max={0.06} step={0.005} value={squigglyFreq} onChange={setSquigglyFreq} />
             </Controls>
 
           </div>
