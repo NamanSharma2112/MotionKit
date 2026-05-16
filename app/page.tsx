@@ -16,384 +16,191 @@ import ScrollReveal from "./compoents/ScrollReveal";
 import Typewriter from "./compoents/Typewriter";
 import LetterSwap from "./compoents/LetterSwap";
 import SquigglyText from "./compoents/SquigglyText";
-import TableOfContents, { TocSection } from "./compoents/TableOfContents";
-
-const tocSections: TocSection[] = [
-  { id: "section-forms",      label: "Forms & Modals" },
-  { id: "section-animations", label: "Animations" },
-  { id: "section-buttons",    label: "Buttons" },
-  { id: "section-text",       label: "Text Effects" },
-  { id: "section-cards",      label: "Cards" },
-  { id: "section-scroll",     label: "Scroll" },
-  { id: "section-mascot",     label: "Mascot" },
-];
-
-/* ─── tiny control helpers ──────────────────────── */
-function Slider({ label, min, max, step = 1, value, onChange }: {
-  label: string; min: number; max: number; step?: number;
-  value: number; onChange: (v: number) => void;
-}) {
-  return (
-    <div className="ctrl-row">
-      <span className="ctrl-label">{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        className="ctrl-slider" />
-      <span className="ctrl-val">{value}</span>
-    </div>
-  );
-}
-
-function Toggle({ label, value, onChange }: {
-  label: string; value: boolean; onChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="ctrl-row">
-      <span className="ctrl-label">{label}</span>
-      <button
-        onClick={() => onChange(!value)}
-        className={`ctrl-toggle ${value ? "ctrl-toggle-on" : ""}`}
-      >
-        <span className="ctrl-toggle-knob" />
-      </button>
-    </div>
-  );
-}
-
-function Select({ label, options, value, onChange }: {
-  label: string; options: string[]; value: string; onChange: (v: string) => void;
-}) {
-  return (
-    <div className="ctrl-row">
-      <span className="ctrl-label">{label}</span>
-      <select value={value} onChange={e => onChange(e.target.value)} className="ctrl-select">
-        {options.map(o => <option key={o}>{o}</option>)}
-      </select>
-    </div>
-  );
-}
-
-function Controls({ children }: { children: React.ReactNode }) {
-  return <div className="ctrls-panel">{children}</div>;
-}
 
 /* ─── page ──────────────────────────────────────── */
 export default function Home() {
-  /* Staggered List */
-  const [staggerDelay, setStaggerDelay]     = useState(0.1);
-  const [staggerDir, setStaggerDir]         = useState<"up"|"down">("up");
-
-  /* Animated Counter */
-  const [counterDur, setCounterDur]         = useState(2);
-  const [counterTarget, setCounterTarget]   = useState(100);
-
-  /* Text Scramble */
-  const [scrambleText, setScrambleText]     = useState("MotionKit");
-  const [scrambleSpeed, setScrambleSpeed]   = useState(50);
-
-  /* Letter Swap */
-  const [swapInterval, setSwapInterval]     = useState(2500);
-  const [swapStiffness, setSwapStiffness]   = useState(120);
-  const [swapDamping, setSwapDamping]       = useState(18);
-
-  /* Squiggly Text */
-  const [squigglySpeed, setSquigglySpeed]       = useState(0.4);
-  const [squigglyScale, setSquigglyScale]       = useState(6);
-  const [squigglyFreq, setSquigglyFreq]         = useState(0.02);
-
-  /* Typewriter */
-  const [typeSpeed, setTypeSpeed]           = useState(80);
-  const [typePause, setTypePause]           = useState(1500);
-
-  /* Parallax Tilt */
-  const [tiltMax, setTiltMax]               = useState(20);
-  const [tiltGlare, setTiltGlare]           = useState(true);
-
-  /* Scroll Reveal */
-  const [revealDir, setRevealDir]           = useState<"up"|"down"|"left"|"right">("up");
-  const [revealDelay, setRevealDelay]       = useState(0.1);
-
-  /* Magnetic */
-  const [magnetStrength, setMagnetStrength] = useState(0.4);
-
   return (
-    <main className="home-root">
-      {/* ── Sidebar TOC ─── */}
-      <aside className="home-sidebar">
-        <TableOfContents sections={tocSections} />
-      </aside>
+    <main className="landing-root">
+      {/* ── Edge glow effects ─── */}
+      <div className="edge-glow edge-glow-left" />
+      <div className="edge-glow edge-glow-right" />
+      <div className="edge-glow edge-glow-bottom" />
+      <div className="edge-glow edge-glow-top" />
 
-      {/* ── Main content ─── */}
-      <div className="home-content">
-        <header className="home-header">
-          <h1 className="home-title animate-gradient-text animate-shadow-pulse">
-            MotionKit
-          </h1>
-          <p className="home-subtitle">
-            Copy-paste animations, transitions &amp; interactive components for modern web apps.
-          </p>
-          <div className="home-divider" />
-        </header>
+      {/* ── Hero Section ─── */}
+      <header className="landing-hero">
+        <div className="landing-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <h1 className="landing-title">MotionKit</h1>
+        <p className="landing-subtitle">
+          Collection of the most essential animations & transitions for web apps
+          that you can just copy and paste into any project.
+        </p>
+      </header>
 
-        {/* ── Forms & Modals ── */}
-        <section id="section-forms" className="home-section">
-          <h2 className="section-label">Forms &amp; Modals</h2>
-          <div className="cards-grid">
-            <ComponentCard
-              title="Edit Profile"
-              description="A beautiful, responsive edit profile modal with an integrated preview."
-              code={editProfileCode}
-            >
-              <div className="flex items-center justify-center w-full h-full scale-[0.65] sm:scale-75 md:scale-[0.85] origin-center bg-transparent">
-                <EditProfileModal />
-              </div>
-            </ComponentCard>
-
-            <ComponentCard
-              title="Gooey Search"
-              description="A slick search input with a gooey SVG filter effect."
-            >
-              <div className="flex items-center justify-center w-full h-full">
-                <Gooey />
-              </div>
-            </ComponentCard>
+      {/* ── Card Grid ─── */}
+      <section className="landing-grid">
+        <ComponentCard
+          title="Edit Profile"
+          description="A beautiful, responsive edit profile modal with an integrated preview."
+          code={editProfileCode}
+        >
+          <div className="flex items-center justify-center w-full h-full scale-[0.65] sm:scale-75 md:scale-[0.85] origin-center bg-transparent">
+            <EditProfileModal />
           </div>
-        </section>
+        </ComponentCard>
 
-        {/* ── Animations ── */}
-        <section id="section-animations" className="home-section">
-          <h2 className="section-label">Animations</h2>
-          <div className="cards-grid">
-
-            <ComponentCard
-              title="Staggered List"
-              description="Children animate in sequence — each item enters after the previous with a configurable delay and direction."
-              showAnimateButton
-            >
-              <div className="flex items-center justify-center w-full h-full">
-                <StaggeredList staggerDelay={staggerDelay} direction={staggerDir} />
-              </div>
-            </ComponentCard>
-            <Controls>
-              <Slider label="Delay (s)" min={0.05} max={0.5} step={0.05} value={staggerDelay} onChange={setStaggerDelay} />
-              <Select label="Direction" options={["up","down"]} value={staggerDir} onChange={v => setStaggerDir(v as "up"|"down")} />
-            </Controls>
-
-            <ComponentCard
-              title="Animated Counter"
-              description="Numbers count up from zero to a target with cubic easing — great for stats sections."
-              showAnimateButton
-            >
-              <div className="flex items-center justify-center w-full h-full">
-                <AnimatedCounter duration={counterDur} target={counterTarget} />
-              </div>
-            </ComponentCard>
-            <Controls>
-              <Slider label="Target" min={10} max={999} step={10} value={counterTarget} onChange={setCounterTarget} />
-              <Slider label="Duration (s)" min={0.5} max={5} step={0.5} value={counterDur} onChange={setCounterDur} />
-            </Controls>
-
+        <ComponentCard
+          title="Animated Counter"
+          description="Digit flip with blur and stagger"
+          showAnimateButton
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <AnimatedCounter duration={2} target={100} />
           </div>
-        </section>
+        </ComponentCard>
 
-        {/* ── Buttons ── */}
-        <section id="section-buttons" className="home-section">
-          <h2 className="section-label">Buttons</h2>
-          <div className="cards-grid">
-
-            <ComponentCard
-              title="Smooth Button"
-              description="Elegant spring-physics button with a fluid hover state and satisfying click compression."
-            >
-              <div className="flex items-center justify-center w-full h-full">
-                <SmoothButton />
-              </div>
-            </ComponentCard>
-
-            <ComponentCard
-              title="Magnetic Button"
-              description="Cursor-attracted button that physically follows the mouse within its radius using spring physics."
-            >
-              <div className="flex items-center justify-center w-full h-full">
-                <MagneticButton strength={magnetStrength} />
-              </div>
-            </ComponentCard>
-            <Controls>
-              <Slider label="Strength" min={0.1} max={1} step={0.1} value={magnetStrength} onChange={setMagnetStrength} />
-            </Controls>
-
+        <ComponentCard
+          title="Gooey Search"
+          description="A slick search input with a gooey SVG filter effect."
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <Gooey />
           </div>
-        </section>
+        </ComponentCard>
 
-        {/* ── Text Effects ── */}
-        <section id="section-text" className="home-section">
-          <h2 className="section-label">Text Effects</h2>
-          <div className="cards-grid">
-
-            <ComponentCard
-              title="Text Scramble"
-              description="Cyberpunk-style decoder that randomises characters then resolves to the final string — perfect for loading states."
-              showAnimateButton
-            >
-              <div className="scale-75 w-full h-full flex items-center justify-center">
-                <TextScramble text={scrambleText} delay={scrambleSpeed} />
-              </div>
-            </ComponentCard>
-            <Controls>
-              <div className="ctrl-row">
-                <span className="ctrl-label">Text</span>
-                <input
-                  type="text" value={scrambleText}
-                  onChange={e => setScrambleText(e.target.value)}
-                  className="ctrl-input"
-                  maxLength={20}
-                />
-              </div>
-              <Slider label="Speed (ms)" min={10} max={200} step={10} value={scrambleSpeed} onChange={setScrambleSpeed} />
-            </Controls>
-
-            <ComponentCard
-              title="Typewriter Effect"
-              description="Multi-phrase typewriter with blinking cursor, configurable typing speed, and smart pause between strings."
-              showAnimateButton
-            >
-              <div className="flex items-center justify-center w-full h-full px-4 text-center">
-                <Typewriter typeSpeed={typeSpeed} pauseDuration={typePause} />
-              </div>
-            </ComponentCard>
-            <Controls>
-              <Slider label="Type speed (ms)" min={20} max={200} step={10} value={typeSpeed} onChange={setTypeSpeed} />
-              <Slider label="Pause (ms)" min={500} max={4000} step={500} value={typePause} onChange={setTypePause} />
-            </Controls>
-
-            <ComponentCard
-              title="Letter Swap"
-              description="Layout-animated word cycler — shared letters slide between positions using motion layoutId while unique ones fade in and out."
-            >
-              <div className="flex items-center justify-center w-full h-full">
-                <div style={{ fontSize: '3rem', color: 'white', fontFamily: 'var(--font-mono, monospace)' }}>
-                  <LetterSwap
-                    words={["Motion", "Design", "Create", "Morph!"]}
-                    interval={swapInterval}
-                    stiffness={swapStiffness}
-                    damping={swapDamping}
-                  />
-                </div>
-              </div>
-            </ComponentCard>
-            <Controls>
-              <Slider label="Interval (ms)" min={1000} max={5000} step={250} value={swapInterval} onChange={setSwapInterval} />
-              <Slider label="Stiffness" min={40} max={300} step={10} value={swapStiffness} onChange={setSwapStiffness} />
-              <Slider label="Damping" min={5} max={40} step={1} value={swapDamping} onChange={setSwapDamping} />
-            </Controls>
-
-            <ComponentCard
-              title="Squiggly Text"
-              description="Pure CSS + SVG wiggle effect — 5 feTurbulence filters with different seeds cycled via keyframes. No canvas or animation library needed."
-            >
-              <div className="flex items-center justify-center w-full h-full">
-                <div style={{ fontSize: '2.8rem', color: 'white' }}>
-                  <SquigglyText
-                    text="Wiggly!"
-                    speed={squigglySpeed}
-                    scale={squigglyScale}
-                    baseFrequency={squigglyFreq}
-                  />
-                </div>
-              </div>
-            </ComponentCard>
-            <Controls>
-              <Slider label="Speed (s)" min={0.1} max={1.5} step={0.1} value={squigglySpeed} onChange={setSquigglySpeed} />
-              <Slider label="Scale" min={1} max={20} step={1} value={squigglyScale} onChange={setSquigglyScale} />
-              <Slider label="Frequency" min={0.005} max={0.06} step={0.005} value={squigglyFreq} onChange={setSquigglyFreq} />
-            </Controls>
-
+        <ComponentCard
+          title="Text Scramble"
+          description="Text swap transition with blur"
+          showAnimateButton
+        >
+          <div className="scale-75 w-full h-full flex items-center justify-center">
+            <TextScramble text="MotionKit" delay={50} />
           </div>
-        </section>
+        </ComponentCard>
 
-        {/* ── Cards ── */}
-        <section id="section-cards" className="home-section">
-          <h2 className="section-label">Cards</h2>
-          <div className="cards-grid">
-
-            <ComponentCard
-              title="Parallax Tilt Card"
-              description="3D perspective card that rotates to follow the cursor — includes configurable tilt angle and optional glare sheen."
-            >
-              <div className="flex items-center justify-center w-full h-full">
-                <ParallaxTiltCard maxTilt={tiltMax} glare={tiltGlare} />
-              </div>
-            </ComponentCard>
-            <Controls>
-              <Slider label="Max tilt (°)" min={5} max={40} value={tiltMax} onChange={setTiltMax} />
-              <Toggle label="Glare" value={tiltGlare} onChange={setTiltGlare} />
-            </Controls>
-
+        <ComponentCard
+          title="Staggered List"
+          description="Staggered item entrance animation"
+          showAnimateButton
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <StaggeredList staggerDelay={0.1} direction="up" />
           </div>
-        </section>
+        </ComponentCard>
 
-        {/* ── Scroll ── */}
-        <section id="section-scroll" className="home-section">
-          <h2 className="section-label">Scroll</h2>
-          <div className="cards-grid">
-
-            <ComponentCard
-              title="Scroll Reveal"
-              description="Elements fade and slide into view from any direction when they enter the viewport — zero config needed."
-            >
-              <div className="flex flex-col items-center justify-center w-full h-full gap-4">
-                <ScrollReveal direction={revealDir} delay={revealDelay}>
-                  <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 shadow-xl flex items-center justify-center text-white font-bold text-sm">
-                    Scroll me
-                  </div>
-                </ScrollReveal>
-              </div>
-            </ComponentCard>
-            <Controls>
-              <Select label="Direction" options={["up","down","left","right"]} value={revealDir} onChange={v => setRevealDir(v as any)} />
-              <Slider label="Delay (s)" min={0} max={1} step={0.1} value={revealDelay} onChange={setRevealDelay} />
-            </Controls>
-
+        <ComponentCard
+          title="Smooth Button"
+          description="Spring-physics button with fluid hover"
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <SmoothButton />
           </div>
-        </section>
+        </ComponentCard>
 
-
-
-        {/* ── Mascot ── */}
-        <section id="section-mascot" className="home-section">
-          <h2 className="section-label">Mascot</h2>
-          <div className="cards-grid">
-
-            <ComponentCard
-              title="Bunny Mascot"
-              description="Animated SVG character with eye-tracking — the eyes follow the cursor anywhere on the page."
-            >
-              <div className="scale-75 w-full h-full flex items-center justify-center">
-                <BunnyIcon />
-              </div>
-            </ComponentCard>
-
+        <ComponentCard
+          title="Typewriter Effect"
+          description="Multi-phrase typewriter with blinking cursor"
+          showAnimateButton
+        >
+          <div className="flex items-center justify-center w-full h-full px-4 text-center">
+            <Typewriter typeSpeed={80} pauseDuration={1500} />
           </div>
-        </section>
+        </ComponentCard>
 
-        <footer className="home-footer">
-          <div className="home-divider" />
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">
-            Inspired by{" "}
-            <a href="https://transitions.dev/" target="_blank" rel="noopener noreferrer"
-              className="text-neutral-900 dark:text-white hover:underline underline-offset-4">
-              transitions.dev
-            </a>
-          </p>
-          <p className="text-sm text-neutral-400 dark:text-neutral-500 flex items-center gap-2">
-            Made with ❤️ by{" "}
-            <a href="https://namansharma.com" target="_blank" rel="noopener noreferrer"
-              className="text-neutral-900 dark:text-white font-semibold hover:underline underline-offset-4">
-              Naman Sharma
-            </a>
-          </p>
-        </footer>
-      </div>
+        <ComponentCard
+          title="Magnetic Button"
+          description="Cursor-attracted spring physics button"
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <MagneticButton strength={0.4} />
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="Letter Swap"
+          description="Layout-animated word cycler with shared letter transitions"
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <div style={{ fontSize: '3rem', color: 'var(--foreground)', fontFamily: 'var(--font-mono, monospace)' }}>
+              <LetterSwap
+                words={["Motion", "Design", "Create", "Morph!"]}
+                interval={2500}
+                stiffness={120}
+                damping={18}
+              />
+            </div>
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="Parallax Tilt Card"
+          description="3D perspective card with cursor tracking"
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <ParallaxTiltCard maxTilt={20} glare={true} />
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="Scroll Reveal"
+          description="Fade and slide on viewport entry"
+        >
+          <div className="flex flex-col items-center justify-center w-full h-full gap-4">
+            <ScrollReveal direction="up" delay={0.1}>
+              <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 shadow-xl flex items-center justify-center text-white font-bold text-sm">
+                Scroll me
+              </div>
+            </ScrollReveal>
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="Squiggly Text"
+          description="Pure CSS + SVG wiggle filter effect"
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <div style={{ fontSize: '2.8rem', color: 'var(--foreground)' }}>
+              <SquigglyText
+                text="Wiggly!"
+                speed={0.4}
+                scale={6}
+                baseFrequency={0.02}
+              />
+            </div>
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="Bunny Mascot"
+          description="Animated SVG character with eye-tracking"
+        >
+          <div className="scale-75 w-full h-full flex items-center justify-center">
+            <BunnyIcon />
+          </div>
+        </ComponentCard>
+      </section>
+
+      {/* ── Footer ─── */}
+      <footer className="landing-footer">
+        <p className="landing-footer-text">
+          Inspired by{" "}
+          <a href="https://transitions.dev/" target="_blank" rel="noopener noreferrer"
+            className="landing-footer-link">
+            transitions.dev
+          </a>
+        </p>
+        <p className="landing-footer-credit">
+          Made with ❤️ by{" "}
+          <a href="https://namansharma.com" target="_blank" rel="noopener noreferrer"
+            className="landing-footer-link landing-footer-link-bold">
+            Naman Sharma
+          </a>
+        </p>
+      </footer>
     </main>
   );
 }
