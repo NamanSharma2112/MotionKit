@@ -280,6 +280,7 @@ export default function SvgMakerPage() {
         <div className="flex flex-col gap-6">
           <div
             className="w-full aspect-video rounded-3xl shadow-xl border border-neutral-200/50 dark:border-neutral-800/50 overflow-hidden bg-neutral-50 dark:bg-[#111] relative select-none flex items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#262626_1px,transparent_1px)] [background-size:20px_20px]"
+            style={{ contain: 'strict', boxSizing: 'border-box' }}
           >
             {editorMode === 'canvas' ? (
               <svg 
@@ -287,6 +288,7 @@ export default function SvgMakerPage() {
                 viewBox="0 0 800 450" 
                 preserveAspectRatio="none"
                 className="w-full h-full cursor-crosshair touch-none absolute inset-0"
+                style={{ transition: 'none', willChange: 'auto' }}
                 onPointerDown={startDrawing}
                 onPointerMove={draw}
                 onPointerUp={endDrawing}
