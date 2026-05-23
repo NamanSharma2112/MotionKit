@@ -14,6 +14,7 @@ import ScrollReveal from "./compoents/ScrollReveal";
 import Typewriter from "./compoents/Typewriter";
 import LetterSwap from "./compoents/LetterSwap";
 import SquigglyText from "./compoents/SquigglyText";
+import CharacterCounter from "./compoents/CharacterCounter";
 
 import {
   gooeyCode,
@@ -28,6 +29,7 @@ import {
   letterSwapCode,
   squigglyTextCode,
   bunnyIconCode,
+  characterCounterCode,
 } from "./compoents/componentCodes";
 
 /* ─── page ──────────────────────────────────────── */
@@ -85,6 +87,17 @@ export default function Home() {
         >
           <div className="flex items-center justify-center w-full h-full">
             <AnimatedCounter duration={2} target={100} />
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="Character Counter"
+          description="Dynamic spring physics character limit counter"
+          code={characterCounterCode}
+          showAnimateButton
+        >
+          <div className="scale-75 sm:scale-90 w-full h-full flex items-center justify-center">
+            <CharacterCounter />
           </div>
         </ComponentCard>
 

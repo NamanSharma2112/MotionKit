@@ -14,6 +14,7 @@ const filesToRead = [
   'LetterSwap.tsx',
   'SquigglyText.tsx',
   'BunnyIcon.tsx',
+  'CharacterCounter.tsx',
 ];
 
 const variables = [
@@ -29,6 +30,7 @@ const variables = [
   'letterSwapCode',
   'squigglyTextCode',
   'bunnyIconCode',
+  'characterCounterCode',
 ];
 
 let output = '// Auto-generated: source code strings for component copy-to-clipboard\n\n';
