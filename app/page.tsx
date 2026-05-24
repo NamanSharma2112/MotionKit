@@ -15,6 +15,7 @@ import Typewriter from "./compoents/Typewriter";
 import LetterSwap from "./compoents/LetterSwap";
 import SquigglyText from "./compoents/SquigglyText";
 import CharacterCounter from "./compoents/CharacterCounter";
+import AnimatePresenceModes from "./compoents/AnimatePresenceModes";
 
 import {
   gooeyCode,
@@ -30,6 +31,7 @@ import {
   squigglyTextCode,
   bunnyIconCode,
   characterCounterCode,
+  animatePresenceModesCode,
 } from "./compoents/componentCodes";
 
 /* ─── page ──────────────────────────────────────── */
@@ -98,6 +100,16 @@ export default function Home() {
         >
           <div className="scale-75 sm:scale-90 w-full h-full flex items-center justify-center">
             <CharacterCounter />
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="AnimatePresence Modes"
+          description="A demonstration of the different exit modes in Framer Motion"
+          code={animatePresenceModesCode}
+        >
+          <div className="scale-75 sm:scale-90 w-full h-full flex items-center justify-center">
+            <AnimatePresenceModes />
           </div>
         </ComponentCard>
 
