@@ -11,6 +11,10 @@
   --card-inner-border: rgba(0, 0, 0, 0.06);
   --glow-color: rgba(100, 140, 255, 0.15);
   --subtitle-color: #666666;
+  
+  --background-alt: #F5F5F7;
+  --background-gray: #e8e8edb8;
+  --radius-lg: 28px;
 }
 
 :root.dark, .dark {
@@ -23,11 +27,19 @@
   --card-inner-border: rgba(255, 255, 255, 0.04);
   --glow-color: rgba(60, 100, 255, 0.12);
   --subtitle-color: #888888;
+  
+  --background-alt: #1a1a1a;
+  --background-gray: #2c2c2c99;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-background-alt: var(--background-alt);
+  --color-background-gray: var(--background-gray);
+  --shadow-custom: inset 0 0 .5px 0 rgba(0,0,0,.11);
+  --radius-lg: var(--radius-lg);
+  --breakpoint-2xl: 1440px;
 }
 
 html {
@@ -287,13 +299,14 @@ svg.touch-none, svg.touch-none * {
 }
 
 /* ── Templates Grid (wider cards) ── */
-.landing-grid-templates {
+.landing-grid.landing-grid-templates {
   grid-template-columns: 1fr;
-  max-width: 1000px;
+  width: 100%;
+  max-width: 100%;
 }
 
-.landing-grid-templates .td-card-preview {
-  min-height: 500px;
+.landing-grid.landing-grid-templates .td-card-preview {
+  min-height: 800px;
 }
 
 /* ── Card Grid (3 columns like transitions.dev) ── */

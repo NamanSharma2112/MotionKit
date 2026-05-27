@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { editProfileCode } from "../compoents/EditProfileModalCode";
+import { appleAccordionCode } from "../compoents/componentCodes";
 import EditProfileModal from "../compoents/EditProfileModal";
+import AppleAccordion from "../compoents/apple-accordion/AppleAccordion";
 import ComponentCard from "../compoents/ComponentCard";
 
 /* ─── templates page ──────────────────────────────────────── */
@@ -59,6 +61,16 @@ export default function TemplatesPage() {
         >
           <div className="flex items-center justify-center w-full h-full origin-center bg-transparent p-4 sm:p-8">
             <EditProfileModal />
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="Apple Accordion"
+          description="A smooth, physics-based expandable accordion inspired by apple.com"
+          code={appleAccordionCode}
+        >
+          <div className="flex items-center justify-center w-full h-full origin-center bg-transparent">
+            <AppleAccordion />
           </div>
         </ComponentCard>
       </section>

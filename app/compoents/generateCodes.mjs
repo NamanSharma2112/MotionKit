@@ -16,6 +16,7 @@ const filesToRead = [
   'BunnyIcon.tsx',
   'CharacterCounter.tsx',
   'AnimatePresenceModes.tsx',
+  'apple-accordion/AppleAccordion.tsx',
 ];
 
 const variables = [
@@ -33,6 +34,7 @@ const variables = [
   'bunnyIconCode',
   'characterCounterCode',
   'animatePresenceModesCode',
+  'appleAccordionCode',
 ];
 
 let output = '// Auto-generated: source code strings for component copy-to-clipboard\n\n';
