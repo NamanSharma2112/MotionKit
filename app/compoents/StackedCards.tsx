@@ -30,6 +30,8 @@ const INITIAL_STACK = [
   },
 ];
 
+const STACK_SPRING = { type: "spring" as const, stiffness: 380, damping: 32 };
+
 const StackedCards = () => {
   const [stack, setStack] = React.useState(INITIAL_STACK);
 
@@ -37,12 +39,12 @@ const StackedCards = () => {
     <div className="relative flex h-96 w-80 items-center justify-center">
       {stack.map((item, index) => (
         <StackedCardItem
-          key={`${item.title}-${index}`}
+          key={item.title}
           item={item}
           index={index}
           total={stack.length}
           onSendToBack={() => {
-            if (index === 0) setStack((s) => [...s.slice(1), s[0]]);
+            setStack((s) => [...s.slice(1), s[0]]);
           }}
         />
       ))}
@@ -59,8 +61,6 @@ type StackedCardsProps = {
   onSendToBack: () => void;
 };
 
-const STACK_SPRING = { type: "spring" as const, stiffness: 380, damping: 32 };
-
 const StackedCardItem: React.FC<StackedCardsProps> = ({
   item,
   index,
@@ -73,12 +73,18 @@ const StackedCardItem: React.FC<StackedCardsProps> = ({
 
   return (
     <motion.div
+      layout
       drag={isTop ? "x" : false}
       dragConstraints={{ left: -150, right: 150 }}
-      dragElastic={0.08}
-      onDragEnd={() => {
-        if (!isTop || !onSendToBack) return; 
-        onSendToBack();
+      dragElastic={0.12}
+      dragMomentum={false}
+      onDragEnd={(_, info) => {
+        if (!isTop) return;
+
+        if (Math.abs(info.offset.x) > 100) {
+          onSendToBack();
+        }
+
         animate(x, 0, STACK_SPRING);
       }}
       style={{ zIndex: total - index, rotate, x }}
@@ -101,7 +107,7 @@ const StackedCardItem: React.FC<StackedCardsProps> = ({
       <p className="absolute bottom-4 left-4 text-white text-sm z-20">
         {item.description}
       </p>
-      <div className="absolute inset-0 h-full w-full bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded-xl pointer-events-none"></div>
+      <div className="absolute inset-0 h-full w-full bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded-xl pointer-events-none" />
     </motion.div>
   );
 };
