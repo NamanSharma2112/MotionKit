@@ -16,6 +16,7 @@ import LetterSwap from "./compoents/LetterSwap";
 import SquigglyText from "./compoents/SquigglyText";
 import CharacterCounter from "./compoents/CharacterCounter";
 import AnimatePresenceModes from "./compoents/AnimatePresenceModes";
+import StackedCards from "./compoents/StackedCards";
 
 import {
   gooeyCode,
@@ -32,6 +33,7 @@ import {
   bunnyIconCode,
   characterCounterCode,
   animatePresenceModesCode,
+  stackedCardsCode,
 } from "./compoents/componentCodes";
 
 /* ─── page ──────────────────────────────────────── */
@@ -110,6 +112,16 @@ export default function Home() {
         >
           <div className="scale-75 sm:scale-90 w-full h-full flex items-center justify-center">
             <AnimatePresenceModes />
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="Stacked Cards"
+          description="A draggable, swipable stack of 3D cards"
+          code={stackedCardsCode}
+        >
+          <div className="scale-75 w-full h-full flex items-center justify-center -translate-y-4">
+            <StackedCards />
           </div>
         </ComponentCard>
 

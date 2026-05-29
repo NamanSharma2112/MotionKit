@@ -16,6 +16,7 @@ const filesToRead = [
   'BunnyIcon.tsx',
   'CharacterCounter.tsx',
   'AnimatePresenceModes.tsx',
+  'StackedCards.tsx',
   'apple-accordion/AppleAccordion.tsx',
 ];
 
@@ -34,6 +35,7 @@ const variables = [
   'bunnyIconCode',
   'characterCounterCode',
   'animatePresenceModesCode',
+  'stackedCardsCode',
   'appleAccordionCode',
 ];
 
