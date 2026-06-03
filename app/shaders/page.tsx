@@ -315,15 +315,17 @@ function ShaderCanvas({
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio, 2);
-      const w = canvas.clientWidth;
-      const h = canvas.clientHeight;
+      const parent = canvas.parentElement;
+      const w = parent ? parent.clientWidth : canvas.clientWidth;
+      const h = parent ? parent.clientHeight : canvas.clientHeight;
+      if (w === 0 || h === 0) return;
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       gl.viewport(0, 0, canvas.width, canvas.height);
     };
     resize();
     const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
+    ro.observe(canvas.parentElement || canvas);
 
     const loop = () => {
       if (errRef.current) return;
@@ -347,7 +349,14 @@ function ShaderCanvas({
     <canvas
       ref={canvasRef}
       className={className}
-      style={{ width: "100%", height: "100%", display: "block", ...style }}
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "block",
+        transition: "none",
+        contain: "strict",
+        ...style,
+      }}
     />
   );
 }
@@ -530,10 +539,8 @@ export default function ShadersPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 max-w-6xl w-full">
         {/* Preview */}
         <div className="flex flex-col gap-6">
-          <motion.div
-            layout
+          <div
             className="w-full aspect-video rounded-3xl shadow-2xl border border-neutral-200/50 dark:border-neutral-800/50 overflow-hidden relative"
-            transition={{ layout: { duration: 0.4 } }}
           >
             <ShaderCanvas
               key={activeFragment}
@@ -544,7 +551,7 @@ export default function ShadersPage() {
             <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-md text-white text-xs font-medium">
               {selectedName}
             </div>
-          </motion.div>
+          </div>
 
           {/* Code Output */}
           <div className="bg-neutral-50 dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800">

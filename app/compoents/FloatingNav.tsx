@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Image, Sun, Moon, Layers, PenTool, LayoutDashboard, Sparkles } from "lucide-react";
+import { Home, Image, Sun, Moon, Layers, PenTool, LayoutDashboard, Sparkles, Box } from "lucide-react";
 
 type NavItem = {
   id: string;
@@ -49,6 +49,18 @@ const icons: NavItem[] = [
     label: "Shaders",
     path: "/shaders",
     icon: <Sparkles size={20} />,
+  },
+  {
+    id: "ascii",
+    label: "ASCII Animator",
+    path: "/ascii",
+    icon: <LayoutDashboard size={20} />,
+  },
+  {
+    id: "isometric",
+    label: "Isometric Maker",
+    path: "/isometric",
+    icon: <Box size={20} />,
   },
   {
     id: "github",

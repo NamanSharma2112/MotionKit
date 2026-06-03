@@ -64,6 +64,11 @@ svg.touch-none, svg.touch-none * {
   transition: none !important;
 }
 
+/* Disable transitions on canvas elements to prevent size-changing glitches */
+canvas {
+  transition: none !important;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
