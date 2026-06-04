@@ -304,7 +304,7 @@ export default function IsometricMakerPage() {
         <div className="flex flex-col gap-4">
           
           {/* Main Toolbar */}
-          <div className="flex items-center justify-between p-3 bg-neutral-100 dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-neutral-100 dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800">
             <div className="flex gap-2">
               <button onClick={() => setTool('build')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${tool === 'build' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-black text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-800'}`}><Hammer size={16}/> Build</button>
               <button onClick={() => setTool('paint')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${tool === 'paint' ? 'bg-pink-600 text-white' : 'bg-white dark:bg-black text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-800'}`}><PaintBucket size={16}/> Paint</button>

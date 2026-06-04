@@ -121,11 +121,11 @@ export default function FloatingNav() {
   };
 
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+    <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 max-w-[95vw]">
       <motion.div
         onMouseMove={(e) => mouseX.set(e.pageX)}
         onMouseLeave={() => mouseX.set(0)}
-        className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-white/30 dark:bg-black/30 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl"
+        className="flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-white/30 dark:bg-black/30 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl overflow-x-auto overflow-y-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {icons.map((item) => (
           <NavIcon
@@ -188,6 +188,9 @@ function NavIcon({
     <motion.div
       ref={ref}
       style={{ width }}
+      whileHover={{ y: -6, scale: 1.15 }}
+      whileTap={{ scale: 0.9 }}
+      transition={{ type: "spring", stiffness: 400, damping: 12 }}
       className={`relative flex items-center justify-center aspect-square rounded-xl transition-colors duration-200 ease-out ${isActive
         ? "bg-neutral-900 text-white dark:bg-white dark:text-black"
         : "bg-white/50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
@@ -203,8 +206,8 @@ function NavIcon({
         />
       )}
 
-      {/* Tooltip */}
-      <div className="absolute -top-10 px-2 py-1 rounded-md bg-neutral-900 text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+      {/* Tooltip (hidden on small screens) */}
+      <div className="absolute -top-10 px-2 py-1 rounded-md bg-neutral-900 text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap hidden sm:block">
         {item.label}
       </div>
     </motion.div>
