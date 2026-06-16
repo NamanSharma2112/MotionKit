@@ -17,6 +17,7 @@ import SquigglyText from "./compoents/SquigglyText";
 import CharacterCounter from "./compoents/CharacterCounter";
 import AnimatePresenceModes from "./compoents/AnimatePresenceModes";
 import StackedCards from "./compoents/StackedCards";
+import PlayPauseMorph from "./compoents/PlayPauseMorph";
 
 import {
   gooeyCode,
@@ -34,6 +35,7 @@ import {
   characterCounterCode,
   animatePresenceModesCode,
   stackedCardsCode,
+  playPauseMorphCode,
 } from "./compoents/componentCodes";
 
 /* ─── page ──────────────────────────────────────── */
@@ -83,6 +85,16 @@ export default function Home() {
 
       {/* ── Card Grid ─── */}
       <section className="landing-grid">
+        <ComponentCard
+          title="Play/Pause Morph"
+          description="SVG path morphing with spring physics"
+          code={playPauseMorphCode}
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <PlayPauseMorph />
+          </div>
+        </ComponentCard>
+
         <ComponentCard
           title="Animated Counter"
           description="Digit flip with blur and stagger"
