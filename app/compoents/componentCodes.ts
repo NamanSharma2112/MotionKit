@@ -33,3 +33,123 @@ export const stackedCardsCode = "\"use client\";\nimport React from \"react\";\n
 export const appleAccordionCode = "\"use client\";\n\nimport { useState } from \"react\";\nimport * as Accordion from \"@radix-ui/react-accordion\";\nimport * as RadioGroup from \"@radix-ui/react-radio-group\";\nimport { AnimatePresence, motion, MotionConfig, stagger } from \"motion/react\";\nimport useMeasure from \"react-use-measure\";\nimport Image from \"next/image\";\nimport { AccordionItemType, data } from \"./data\";\nimport { XMark, Caret, Plus } from \"./icons\";\n\nexport default function AppleAccordion() {\n  const [value, setValue] = useState<string>(\"\");\n\n  return (\n    <MotionConfig\n      transition={{\n        type: \"spring\",\n        stiffness: 800,\n        damping: 80,\n        mass: 4,\n      }}\n    >\n      <div className=\"font-sans flex flex-col justify-center items-center w-full h-full bg-background-alt overflow-hidden rounded-2xl relative\">\n        <div className=\"relative h-[600px] sm:h-[760px] w-full max-w-screen-2xl flex flex-col justify-center overflow-hidden\">\n          <CloseButton value={value} setValue={setValue} />\n          <AccordionControls value={value} setValue={setValue} />\n          <Accordion.Root\n            type=\"single\"\n            value={value}\n            onValueChange={setValue}\n            className=\"ml-[min(90px,6.25vw)] flex flex-col justify-center items-start gap-3\"\n          >\n            {data.map((item) => (\n              <AccordionItem\n                key={item.id}\n                item={item}\n                isOpen={value === item.id}\n                value={item.id}\n                setValue={setValue}\n              />\n            ))}\n          </Accordion.Root>\n        </div>\n      </div>\n    </MotionConfig>\n  );\n}\n\n\ntype CloseButtonProps = {\n  value: string;\n  setValue: React.Dispatch<React.SetStateAction<string>>;\n};\n\nfunction CloseButton({ value, setValue }: CloseButtonProps) {\n  return (\n    <AnimatePresence initial={false}>\n      {value !== \"\" && (\n        <motion.div\n          initial={{\n            opacity: 0,\n            transform: \"translateY(86px) scale(0)\",\n          }}\n          animate={{\n            opacity: 1,\n            transform: \"translateY(0px) scale(1)\",\n          }}\n          exit={{\n            opacity: 0,\n            transform: \"translateY(86px) scale(0)\",\n          }}\n          className=\"absolute top-4 right-4 z-10\"\n        >\n          <button\n            onClick={() => setValue(\"\")}\n            className=\"cursor-pointer rounded-full size-9 bg-background-gray flex items-center justify-center\"\n          >\n            <span className=\"sr-only\">Close</span>\n            <XMark />\n          </button>\n        </motion.div>\n      )}\n    </AnimatePresence>\n  );\n}\n\ntype AccordionControlsProps = {\n  value: string;\n  setValue: React.Dispatch<React.SetStateAction<string>>;\n};\n\nconst buttonVariants = {\n  hidden: {\n    opacity: 0,\n    transform: \"translateY(86px) scale(0)\",\n  },\n  visible: {\n    opacity: 1,\n    transform: \"translateY(0px) scale(1)\",\n  },\n};\n\nfunction AccordionControls({ value, setValue }: AccordionControlsProps) {\n  const currentIndex = data.findIndex((item) => item.id === value);\n  const nextIndex = currentIndex + 1;\n  const previousIndex = currentIndex - 1;\n\n  return (\n    <motion.div\n      initial=\"hidden\"\n      animate={value === \"\" ? \"hidden\" : \"visible\"}\n      variants={{\n        hidden: {\n          transition: {\n            delayChildren: stagger(0.025, { from: \"last\" }),\n          },\n        },\n        visible: {\n          transition: {\n            delayChildren: stagger(0.025),\n          },\n        },\n      }}\n      className=\"absolute top-0 left-0 bottom-0 w-[min(90px,6.25vw)] flex flex-col justify-center items-center gap-5 z-10\"\n    >\n      <motion.div variants={buttonVariants}>\n        <button\n          disabled={value === data[0].id}\n          onClick={() => setValue(data[previousIndex].id)}\n          className=\"cursor-pointer rounded-full size-9 bg-background-gray flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-100\"\n        >\n          <span className=\"sr-only\">Previous</span>\n          <Caret className=\"rotate-180 size-10\" />\n        </button>\n      </motion.div>\n      <motion.div variants={buttonVariants}>\n        <button\n          disabled={value === data[data.length - 1].id}\n          onClick={() => setValue(data[nextIndex].id)}\n          className=\"cursor-pointer rounded-full size-9 bg-background-gray flex items-center justify-center  disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-100\"\n        >\n          <span className=\"sr-only\">Next</span>\n          <Caret />\n        </button>\n      </motion.div>\n    </motion.div>\n  );\n}\n\ntype AccordionItemProps = {\n  item: AccordionItemType;\n  isOpen: boolean;\n  value: string;\n  setValue: React.Dispatch<React.SetStateAction<string>>;\n};\n\nfunction AccordionItem({ item, isOpen, setValue, value }: AccordionItemProps) {\n  const [buttonRef, { width: buttonWidth }] = useMeasure();\n  const [selectedColor, setSelectedColor] = useState<{\n    name: string;\n    code: string;\n  } | null>(data.find((item) => item.id === \"colours\")?.colors?.[0] ?? null);\n\n  return (\n    <Accordion.Item asChild value={value}>\n      <motion.div\n        style={{\n          borderRadius: 28,\n        }}\n        animate={\n          buttonWidth\n            ? {\n                width: isOpen ? 423 : buttonWidth,\n                height: isOpen ? \"auto\" : 56,\n              }\n            : {}\n        }\n        className=\"bg-background-gray w-fit relative overflow-hidden shadow-custom z-0\"\n      >\n        <Accordion.Header asChild>\n          <Accordion.Trigger asChild>\n            <motion.button\n              ref={buttonRef}\n              className=\"h-14 pl-3.5 pr-8 text-[17px] cursor-pointer font-semibold tracking-[-0.022em] leading-[1.2] flex items-center gap-3.5 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 whitespace-nowrap\"\n              onClick={() => setValue(isOpen ? \"\" : value)}\n              style={{\n                borderRadius: 28,\n                pointerEvents: isOpen ? \"none\" : \"auto\",\n              }}\n              animate={{\n                opacity: isOpen ? 0 : 1,\n              }}\n              initial={{\n                opacity: 1,\n              }}\n              transition={{\n                duration: isOpen ? 0.1 : 0.5,\n                delay: isOpen ? 0 : 0.32,\n              }}\n            >\n              {item.id === \"colours\" ? (\n                <div\n                  className=\"size-6 rounded-full inset-shadow-2xs inset-shadow-black/40\"\n                  style={{\n                    backgroundColor: selectedColor?.code,\n                  }}\n                />\n              ) : (\n                <Plus />\n              )}\n              <span>{item.title}</span>\n            </motion.button>\n          </Accordion.Trigger>\n        </Accordion.Header>\n\n        <AnimatePresence initial={false}>\n          {isOpen && (\n            <Accordion.Content forceMount asChild>\n              <motion.div\n                style={{\n                  borderRadius: 28,\n                }}\n                className=\"w-full sm:w-[423px] h-full -mt-14 flex flex-col justify-end\"\n                initial=\"closed\"\n                animate=\"open\"\n                exit=\"closed\"\n              >\n                <motion.div\n                  variants={{\n                    open: {\n                      opacity: 1,\n                      transform: \"translateY(0px)\",\n                      transition: {\n                        delay: 0.32,\n                        duration: 0.5,\n                        transform: {\n                          duration: 0,\n                        },\n                      },\n                    },\n                    closed: {\n                      opacity: 0,\n                      transform: \"translateY(24px)\",\n                      transition: {\n                        delay: 0,\n                        duration: 0.32,\n                      },\n                    },\n                  }}\n                  className=\"h-full flex flex-col justify-between\"\n                >\n                  <p className=\"p-[28px] text-[17px] tracking-[-0.022em]\">\n                    <span className=\"font-semibold\">{item.title}. </span>\n                    {item.description}\n                    {item.id === \"colours\" && `  ${selectedColor?.name}.`}\n                  </p>\n                  {item.imagePath && (\n                    <motion.div className=\"relative w-full aspect-video\">\n                      <Image\n                        src={item.imagePath}\n                        alt={item.title}\n                        fill\n                        sizes=\"423px\"\n                        className=\"object-cover\"\n                        draggable={false}\n                      />\n                    </motion.div>\n                  )}\n                  {item.id === \"colours\" && (\n                    <RadioGroup.Root\n                      value={selectedColor?.name}\n                      onValueChange={(value) =>\n                        setSelectedColor(\n                          item.colors?.find((color) => color.name === value) ??\n                            null\n                        )\n                      }\n                      className=\"flex gap-3.5 justify-center items-center pb-[28px]\"\n                    >\n                      {item.colors?.map((color) => (\n                        <RadioGroup.Item\n                          key={color.name}\n                          value={color.name}\n                          className=\"size-6 rounded-full inset-shadow-xs inset-shadow-black/40 outline-2 outline-transparent data-[state=checked]:outline-foreground outline-offset-2 cursor-pointer\"\n                          style={{ backgroundColor: color.code }}\n                        />\n                      ))}\n                    </RadioGroup.Root>\n                  )}\n                </motion.div>\n              </motion.div>\n            </Accordion.Content>\n          )}\n        </AnimatePresence>\n      </motion.div>\n    </Accordion.Item>\n  );\n}\n";
 
 export const playPauseMorphCode = "\"use client\";\n\nimport React, { useState, useEffect } from \"react\";\nimport { motion } from \"framer-motion\";\n\n/* ─── SVG path definitions ─── */\nconst PAUSE = {\n  left:  \"M5 5L9 5L9 19L5 19Z\",\n  right: \"M15 5L19 5L19 19L15 19Z\",\n};\n\nconst PLAY = {\n  left:  \"M7 5L13 8.5L13 15.5L7 19Z\",\n  right: \"M13 8.5L19 12L19 12L13 15.5Z\",\n};\n\nconst SPRING = {\n  type: \"spring\" as const,\n  stiffness: 300,\n  damping: 22,\n  mass: 0.8,\n};\n\nexport default function PlayPauseMorph({ trigger }: { trigger?: number }) {\n  const [isPlaying, setIsPlaying] = useState(false);\n\n  useEffect(() => {\n    if (trigger && trigger > 0) {\n      setIsPlaying((prev) => !prev);\n    }\n  }, [trigger]);\n\n  const t = isPlaying ? PLAY : PAUSE;\n\n  return (\n    <div className=\"flex flex-col items-center gap-6\">\n      <motion.button\n        onClick={() => setIsPlaying((p) => !p)}\n        whileHover={{ scale: 1.08 }}\n        whileTap={{ scale: 0.92 }}\n        transition={SPRING}\n        className=\"relative w-20 h-20 rounded-full flex items-center justify-center cursor-pointer outline-none border-0\n          bg-neutral-900 dark:bg-white\n          shadow-[0_4px_24px_rgba(0,0,0,0.25)] dark:shadow-[0_4px_24px_rgba(255,255,255,0.15)]\n          hover:shadow-[0_8px_40px_rgba(0,0,0,0.35)] dark:hover:shadow-[0_8px_40px_rgba(255,255,255,0.25)]\n          transition-shadow duration-300\"\n      >\n        {/* Pulse ring */}\n        <motion.div\n          key={isPlaying ? \"play-ring\" : \"pause-ring\"}\n          initial={{ scale: 1, opacity: 0.4 }}\n          animate={{ scale: 1.6, opacity: 0 }}\n          transition={{ duration: 0.6, ease: \"easeOut\" }}\n          className=\"absolute inset-0 rounded-full border-2 border-neutral-900 dark:border-white\"\n        />\n\n        <svg viewBox=\"0 0 24 24\" width={32} height={32} className=\"text-white dark:text-black\">\n          <motion.path\n            d={t.left}\n            animate={{ d: t.left }}\n            initial={false}\n            transition={SPRING}\n            fill=\"currentColor\"\n          />\n          <motion.path\n            d={t.right}\n            animate={{ d: t.right }}\n            initial={false}\n            transition={SPRING}\n            fill=\"currentColor\"\n          />\n        </svg>\n      </motion.button>\n\n      <motion.span\n        key={isPlaying ? \"playing\" : \"paused\"}\n        initial={{ opacity: 0, y: 6, filter: \"blur(4px)\" }}\n        animate={{ opacity: 1, y: 0, filter: \"blur(0px)\" }}\n        transition={{ duration: 0.3 }}\n        className=\"text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400 select-none\"\n      >\n        {isPlaying ? \"Playing\" : \"Paused\"}\n      </motion.span>\n    </div>\n  );\n}\n";
+
+export const gooeyDropdownCode = `"use client";
+
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import { animate, useMotionValue, useMotionValueEvent } from "motion/react";
+
+const BTN_W = 88, BTN_H = 36, PANEL_PAD = 6, FILL = "#1c1c1e";
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function roundedRectShape(x, y, w, h, radius) {
+  const r = Math.max(0, Math.min(radius, w/2, h/2));
+  const k = r * 0.5523;
+  const p = (n) => n.toFixed(3) + "px";
+  return (
+    "shape(from " + p(x+r) + " " + p(y) + ", " +
+    "line to " + p(x+w-r) + " " + p(y) + ", " +
+    "curve to " + p(x+w) + " " + p(y+r) + " with " + p(x+w-r+k) + " " + p(y) + " / " + p(x+w) + " " + p(y+r-k) + ", " +
+    "line to " + p(x+w) + " " + p(y+h-r) + ", " +
+    "curve to " + p(x+w-r) + " " + p(y+h) + " with " + p(x+w) + " " + p(y+h-r+k) + " / " + p(x+w-r+k) + " " + p(y+h) + ", " +
+    "line to " + p(x+r) + " " + p(y+h) + ", " +
+    "curve to " + p(x) + " " + p(y+h-r) + " with " + p(x+r-k) + " " + p(y+h) + " / " + p(x) + " " + p(y+h-r+k) + ", " +
+    "line to " + p(x) + " " + p(y+r) + ", " +
+    "curve to " + p(x+r) + " " + p(y) + " with " + p(x) + " " + p(y+r-k) + " / " + p(x+r-k) + " " + p(y) + ", " +
+    "close)"
+  );
+}
+
+export function GooDropdown({
+  trigger = "Share", items = [{label:"Copy link"},{label:"Share on X"},{label:"Embed"}],
+  width = 220, align = "end", gap = 14, itemHeight = 42,
+  buttonRadius = 12, panelRadius = 22, fill = FILL, gooStrength = 8,
+  spring = { type: "spring", visualDuration: 0.3, bounce: 0.3 }, className,
+}) {
+  const [open, setOpen] = useState(false);
+  const filterId = useId().replace(/[:]/g, "");
+  const rootRef = useRef(null), panelRef = useRef(null), contentRef = useRef(null);
+
+  const geo = useMemo(() => {
+    const panelTop = BTN_H + gap;
+    const panelH = items.length * itemHeight + PANEL_PAD * 2;
+    const btnX = align === "end" ? width - BTN_W : 0;
+    const closed = { x: btnX, y: 0, w: BTN_W, h: BTN_H, r: buttonRadius };
+    const openShape = { x: 0, y: panelTop, w: width, h: panelH, r: panelRadius };
+    return { panelTop, panelH, btnX, closed, open: openShape, layerH: panelTop + panelH };
+  }, [items.length, width, align, gap, itemHeight, buttonRadius, panelRadius]);
+
+  const shapeAt = useMemo(() => {
+    const { closed, open: o } = geo;
+    return (t) => roundedRectShape(lerp(closed.x,o.x,t),lerp(closed.y,o.y,t),lerp(closed.w,o.w,t),lerp(closed.h,o.h,t),lerp(closed.r,o.r,t));
+  }, [geo]);
+
+  const closedShape = shapeAt(0);
+  const progress = useMotionValue(0);
+
+  useMotionValueEvent(progress, "change", (v) => {
+    const shape = shapeAt(v);
+    if (panelRef.current) panelRef.current.style.clipPath = shape;
+    if (contentRef.current) contentRef.current.style.clipPath = shape;
+  });
+
+  useEffect(() => {
+    const a = animate(progress, open ? 1 : 0, spring);
+    return () => a.stop();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const down = (e) => { if (!rootRef.current?.contains(e.target)) setOpen(false); };
+    const key = (e) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("pointerdown", down);
+    window.addEventListener("keydown", key);
+    return () => { window.removeEventListener("pointerdown", down); window.removeEventListener("keydown", key); };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className={"relative select-none " + (className ?? "")} style={{ width, height: geo.layerH }}>
+      <svg className="absolute h-0 w-0" aria-hidden>
+        <defs>
+          <filter id={filterId}>
+            <feGaussianBlur in="SourceGraphic" stdDeviation={gooStrength} result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        </defs>
+      </svg>
+      <div className="pointer-events-none absolute inset-0" style={{ filter: "url(#" + filterId + ")" }}>
+        <div className="absolute top-0" style={{ left: geo.btnX, width: BTN_W, height: BTN_H, borderRadius: buttonRadius, background: fill }} />
+        <div ref={panelRef} className="absolute inset-0" style={{ background: fill, clipPath: closedShape }} />
+      </div>
+      <div className="absolute inset-0">
+        <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open}
+          className="absolute top-0 flex items-center justify-center gap-1.5 text-[13px] font-semibold text-white/90 hover:text-white"
+          style={{ left: geo.btnX, width: BTN_W, height: BTN_H, borderRadius: buttonRadius }}>
+          {trigger}
+        </button>
+        <div ref={contentRef} role="menu" className="absolute inset-0" style={{ clipPath: closedShape, pointerEvents: open ? "auto" : "none" }}>
+          <div className="absolute inset-x-0" style={{ top: geo.panelTop, height: geo.panelH, padding: PANEL_PAD }}>
+            {items.map((item) => (
+              <button key={item.label} role="menuitem" type="button" tabIndex={open ? 0 : -1}
+                onClick={() => { item.onClick?.(); setOpen(false); }}
+                style={{ height: itemHeight }}
+                className="flex w-full items-center rounded-[14px] px-3.5 text-[13.5px] font-medium text-white/60 hover:bg-white/10 hover:text-white">
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function GooeyDropdown(props) {
+  return (
+    <div className="flex w-full h-full items-center justify-center">
+      <GooDropdown {...props} />
+    </div>
+  );
+}
+`;

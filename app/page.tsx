@@ -18,6 +18,7 @@ import CharacterCounter from "./compoents/CharacterCounter";
 import AnimatePresenceModes from "./compoents/AnimatePresenceModes";
 import StackedCards from "./compoents/StackedCards";
 import PlayPauseMorph from "./compoents/PlayPauseMorph";
+import GooeyDropdown from "./compoents/GooeyDropdown";
 
 import {
   gooeyCode,
@@ -36,6 +37,7 @@ import {
   animatePresenceModesCode,
   stackedCardsCode,
   playPauseMorphCode,
+  gooeyDropdownCode,
 } from "./compoents/componentCodes";
 
 /* ─── page ──────────────────────────────────────── */
@@ -92,6 +94,16 @@ export default function Home() {
         >
           <div className="flex items-center justify-center w-full h-full">
             <PlayPauseMorph />
+          </div>
+        </ComponentCard>
+
+        <ComponentCard
+          title="Gooey Dropdown"
+          description="SVG goo filter morphing panel with spring animation"
+          code={gooeyDropdownCode}
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <GooeyDropdown />
           </div>
         </ComponentCard>
 
