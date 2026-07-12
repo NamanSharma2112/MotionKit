@@ -19,6 +19,8 @@ import AnimatePresenceModes from "./compoents/AnimatePresenceModes";
 import StackedCards from "./compoents/StackedCards";
 import PlayPauseMorph from "./compoents/PlayPauseMorph";
 import GooeyDropdown from "./compoents/GooeyDropdown";
+import Name from "./compoents/Name";
+import AnimatedHeroLogo from "./compoents/AnimatedHeroLogo";
 
 import {
   gooeyCode,
@@ -38,24 +40,19 @@ import {
   stackedCardsCode,
   playPauseMorphCode,
   gooeyDropdownCode,
+  nameCode,
 } from "./compoents/componentCodes";
 
 /* ─── page ──────────────────────────────────────── */
 export default function Home() {
   return (
     <main className="landing-root">
-      {/* ── Edge glow effects ─── */}
-      <div className="edge-glow edge-glow-left" />
-      <div className="edge-glow edge-glow-right" />
-      <div className="edge-glow edge-glow-bottom" />
-      <div className="edge-glow edge-glow-top" />
+
 
       {/* ── Hero Section ─── */}
       <header className="landing-hero">
         <div className="landing-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <AnimatedHeroLogo />
         </div>
         <h1 className="landing-title">MotionKit</h1>
         <p className="landing-subtitle">
@@ -87,6 +84,16 @@ export default function Home() {
 
       {/* ── Card Grid ─── */}
       <section className="landing-grid">
+        <ComponentCard
+          title="SVG Gradient Trace"
+          description="Mouse-tracking radial gradient stroke on SVG paths"
+          code={nameCode}
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <Name />
+          </div>
+        </ComponentCard>
+
         <ComponentCard
           title="Play/Pause Morph"
           description="SVG path morphing with spring physics"

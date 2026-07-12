@@ -18,7 +18,7 @@
 }
 
 :root.dark, .dark {
-  --background: #0a0a0f;
+  --background: #171717;
   --foreground: #ededed;
   --dot-color: rgba(255, 255, 255, 0.1);
   --card-bg: #111118;
