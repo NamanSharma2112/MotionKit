@@ -1,7 +1,5 @@
-import "./home.css";
 import { LayoutGrid } from "lucide-react";
 import Link from "next/link";
-import SiteHeader from "./compoents/home/SiteHeader";
 import Hero from "./compoents/home/Hero";
 import HeroCollage from "./compoents/home/HeroCollage";
 import ImportLine from "./compoents/home/ImportLine";
@@ -13,8 +11,6 @@ import { GithubIcon } from "./compoents/home/icons";
 export default function Home() {
   return (
     <div className="mk-root">
-      <SiteHeader />
-
       <main>
         <Hero />
         <HeroCollage />
@@ -55,19 +51,6 @@ export default function Home() {
         <ClosingCta />
       </main>
 
-      <footer className="mk-footer">
-        <p>
-          Made by{" "}
-          <a href="https://namansharma.com" target="_blank" rel="noopener noreferrer">
-            Naman Sharma
-          </a>
-          . Inspired by{" "}
-          <a href="https://transitions.dev/" target="_blank" rel="noopener noreferrer">
-            transitions.dev
-          </a>
-          .
-        </p>
-      </footer>
     </div>
   );
 }

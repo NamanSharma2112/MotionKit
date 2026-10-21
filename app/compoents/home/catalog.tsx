@@ -41,6 +41,10 @@ import {
   nameCode,
 } from "../componentCodes";
 
+import { componentMeta } from "../site";
+
+const meta = (slug: string) => ({ slug, ...componentMeta[slug] });
+
 export type CatalogItem = {
   slug: string;
   title: string;
@@ -56,72 +60,54 @@ export type CatalogItem = {
 /* Every live component on the homepage, in grid order. */
 export const catalog: CatalogItem[] = [
   {
-    slug: "svg-gradient-trace",
-    title: "SVG gradient trace",
-    description: "A radial gradient stroke that follows the cursor across SVG paths.",
+    ...meta("svg-gradient-trace"),
     code: nameCode,
     scale: 0.8,
     render: () => <Name />,
   },
   {
-    slug: "play-pause-morph",
-    title: "Play / pause morph",
-    description: "Icon paths morph between states on a spring.",
+    ...meta("play-pause-morph"),
     code: playPauseMorphCode,
     render: (t) => <PlayPauseMorph trigger={t} />,
   },
   {
-    slug: "gooey-dropdown",
-    title: "Gooey dropdown",
-    description: "A menu that melts out of its trigger with an SVG goo filter.",
+    ...meta("gooey-dropdown"),
     code: gooeyDropdownCode,
     render: () => <GooeyDropdown />,
   },
   {
-    slug: "animated-counter",
-    title: "Animated counter",
-    description: "Digits roll into place with blur and stagger.",
+    ...meta("animated-counter"),
     code: animatedCounterCode,
     replay: true,
     scale: 0.8,
     render: (t) => <AnimatedCounter duration={2} target={100} trigger={t} />,
   },
   {
-    slug: "character-counter",
-    title: "Character counter",
-    description: "A limit ring whose spring velocity grows as you near the end.",
+    ...meta("character-counter"),
     code: characterCounterCode,
     scale: 0.7,
     render: (t) => <CharacterCounter trigger={t} />,
   },
   {
-    slug: "animate-presence-modes",
-    title: "Presence modes",
-    description: "sync, wait and popLayout exits, side by side.",
+    ...meta("animate-presence-modes"),
     code: animatePresenceModesCode,
     scale: 0.7,
     render: () => <AnimatePresenceModes />,
   },
   {
-    slug: "stacked-cards",
-    title: "Stacked cards",
-    description: "A draggable deck of 3D cards you can flick away.",
+    ...meta("stacked-cards"),
     code: stackedCardsCode,
     scale: 0.55,
     render: () => <StackedCards />,
   },
   {
-    slug: "gooey-search",
-    title: "Gooey search",
-    description: "A search button that stretches into an input.",
+    ...meta("gooey-search"),
     code: gooeyCode,
     scale: 0.85,
     render: () => <Gooey />,
   },
   {
-    slug: "text-scramble",
-    title: "Text scramble",
-    description: "Characters resolve out of noise with a soft blur.",
+    ...meta("text-scramble"),
     code: textScrambleCode,
     replay: true,
     render: () => (
@@ -131,42 +117,32 @@ export const catalog: CatalogItem[] = [
     ),
   },
   {
-    slug: "staggered-list",
-    title: "Staggered list",
-    description: "Rows cascade in one after another.",
+    ...meta("staggered-list"),
     code: staggeredListCode,
     replay: true,
     scale: 0.85,
     render: (t) => <StaggeredList staggerDelay={0.08} direction="up" trigger={t} />,
   },
   {
-    slug: "smooth-button",
-    title: "Smooth button",
-    description: "Idle, loading and success states that blur into each other.",
+    ...meta("smooth-button"),
     code: smoothButtonCode,
     render: (t) => <SmoothButton trigger={t} />,
   },
   {
-    slug: "typewriter",
-    title: "Typewriter",
-    description: "Multi-phrase typing with a blinking caret.",
+    ...meta("typewriter"),
     code: typewriterCode,
     replay: true,
     scale: 0.8,
     render: (t) => <Typewriter typeSpeed={80} pauseDuration={1500} trigger={t} />,
   },
   {
-    slug: "magnetic-button",
-    title: "Magnetic button",
-    description: "A button that leans toward your cursor.",
+    ...meta("magnetic-button"),
     code: magneticButtonCode,
     scale: 0.8,
     render: (t) => <MagneticButton strength={0.4} trigger={t} />,
   },
   {
-    slug: "letter-swap",
-    title: "Letter swap",
-    description: "Shared letters glide between words.",
+    ...meta("letter-swap"),
     code: letterSwapCode,
     render: (t) => (
       <div className="mk-letter-swap">
@@ -181,17 +157,13 @@ export const catalog: CatalogItem[] = [
     ),
   },
   {
-    slug: "parallax-tilt-card",
-    title: "Parallax tilt card",
-    description: "3D perspective and glare that track the pointer.",
+    ...meta("parallax-tilt-card"),
     code: parallaxTiltCardCode,
     scale: 0.55,
     render: (t) => <ParallaxTiltCard maxTilt={20} glare trigger={t} />,
   },
   {
-    slug: "scroll-reveal",
-    title: "Scroll reveal",
-    description: "Fade and rise as content enters the viewport.",
+    ...meta("scroll-reveal"),
     code: scrollRevealCode,
     render: () => (
       <ScrollReveal direction="up" delay={0.1}>
@@ -200,9 +172,7 @@ export const catalog: CatalogItem[] = [
     ),
   },
   {
-    slug: "squiggly-text",
-    title: "Squiggly text",
-    description: "A hand-drawn wobble from an SVG turbulence filter.",
+    ...meta("squiggly-text"),
     code: squigglyTextCode,
     render: () => (
       <div className="mk-squiggly">
@@ -211,9 +181,7 @@ export const catalog: CatalogItem[] = [
     ),
   },
   {
-    slug: "bunny-mascot",
-    title: "Bunny mascot",
-    description: "An SVG character whose eyes follow you around.",
+    ...meta("bunny-mascot"),
     code: bunnyIconCode,
     render: (t) => <BunnyIcon size={140} trigger={t} />,
   },

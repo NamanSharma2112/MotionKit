@@ -33,6 +33,20 @@
 }
 
 @theme inline {
+  --color-mk-bg: var(--mk-bg);
+  --color-mk-surface: var(--mk-surface);
+  --color-mk-surface-2: var(--mk-surface-2);
+  --color-mk-surface-3: var(--mk-surface-3);
+  --color-mk-border: var(--mk-border);
+  --color-mk-border-strong: var(--mk-border-strong);
+  --color-mk-text: var(--mk-text);
+  --color-mk-muted: var(--mk-muted);
+  --color-mk-faint: var(--mk-faint);
+  --color-mk-accent: var(--mk-accent);
+  --color-mk-accent-hover: var(--mk-accent-hover);
+  --color-mk-accent-soft: var(--mk-accent-soft);
+  --shadow-mk-sm: var(--mk-shadow-sm);
+  --shadow-mk-md: var(--mk-shadow-md);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-background-alt: var(--background-alt);
@@ -43,13 +57,18 @@
 }
 
 html {
-  background-color: var(--background);
+  background-color: var(--mk-bg);
+}
+
+::selection {
+  background: var(--mk-accent-soft);
+  color: inherit;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background-color: var(--mk-bg);
+  color: var(--mk-text);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
 }
 

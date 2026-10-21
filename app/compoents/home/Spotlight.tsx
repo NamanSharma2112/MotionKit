@@ -1,9 +1,10 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { Check, Copy } from "lucide-react";
 import { catalogBySlug } from "./catalog";
+import SegmentedTabs from "../ui/SegmentedTabs";
 
 const tabs = [
   { slug: "gooey-search", label: "Gooey search", hint: "Click the icon", scale: 1.3 },
@@ -18,37 +19,10 @@ const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 export default function Spotlight() {
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState(false);
-  const listRef = useRef<HTMLDivElement>(null);
-  const activeRef = useRef<HTMLDivElement>(null);
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const reduceMotion = useReducedMotion();
 
   const tab = tabs[active];
   const item = catalogBySlug[tab.slug];
-
-  // The active pill is a second copy of the tab row, clipped down to the
-  // selected tab. Animating the clip keeps text colour and pill in sync.
-  useLayoutEffect(() => {
-    const measure = () => {
-      const list = listRef.current;
-      const overlay = activeRef.current;
-      const el = tabRefs.current[active];
-      if (!list || !overlay || !el) return;
-      const left = el.offsetLeft;
-      const right = list.offsetWidth - (left + el.offsetWidth);
-      overlay.style.clipPath = `inset(0 ${right}px 0 ${left}px round 999px)`;
-    };
-    measure();
-    // Place the pill instantly on first paint; only later changes animate.
-    const raf = requestAnimationFrame(() => {
-      if (activeRef.current) activeRef.current.dataset.ready = "true";
-    });
-    window.addEventListener("resize", measure);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", measure);
-    };
-  }, [active]);
 
   const copy = async () => {
     try {
@@ -60,30 +34,6 @@ export default function Spotlight() {
     setTimeout(() => setCopied(false), 1600);
   };
 
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-    e.preventDefault();
-    const next = (active + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length;
-    setActive(next);
-    tabRefs.current[next]?.focus();
-  };
-
-  const tabRow = (decorative: boolean) =>
-    tabs.map((t, i) => (
-      <button
-        key={t.slug}
-        ref={decorative ? undefined : (el) => { tabRefs.current[i] = el; }}
-        type="button"
-        role={decorative ? undefined : "tab"}
-        aria-selected={decorative ? undefined : i === active}
-        tabIndex={decorative ? -1 : i === active ? 0 : -1}
-        className="mk-tab"
-        onClick={decorative ? undefined : () => setActive(i)}
-      >
-        {t.label}
-      </button>
-    ));
-
   return (
     <section className="mk-section" id="spotlight">
       <div className="mk-section-head">
@@ -93,14 +43,12 @@ export default function Spotlight() {
         </p>
       </div>
 
-      <div className="mk-tabs-wrap">
-        <div className="mk-tabs" ref={listRef} role="tablist" aria-label="Featured components" onKeyDown={onKeyDown}>
-          {tabRow(false)}
-          <div className="mk-tabs-active" ref={activeRef} aria-hidden>
-            {tabRow(true)}
-          </div>
-        </div>
-      </div>
+      <SegmentedTabs
+        label="Featured components"
+        items={tabs.map((t, i) => ({ value: String(i), label: t.label }))}
+        value={String(active)}
+        onChange={(v) => setActive(Number(v))}
+      />
 
       <div className="mk-stage" role="tabpanel" aria-label={item.title}>
         <LayoutGroup id="spotlight">
