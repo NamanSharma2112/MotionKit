@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./ui.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,7 +19,8 @@ export const metadata: Metadata = {
     "Hand-tuned React animations you can copy, paste and ship, plus playgrounds for SVG, shaders, ASCII and more.",
 };
 
-import FloatingNav from "./compoents/FloatingNav";
+import SiteHeader from "./compoents/shell/SiteHeader";
+import SiteFooter from "./compoents/shell/SiteFooter";
 import ContactButton from "./compoents/ContactButton";
 import PageTransition from "./compoents/PageTransition";
 
@@ -33,10 +35,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col transition-colors duration-300" suppressHydrationWarning>
+        <SiteHeader />
         <PageTransition>
           {children}
         </PageTransition>
-        <FloatingNav />
+        <SiteFooter />
         <ContactButton />
       </body>
     </html>

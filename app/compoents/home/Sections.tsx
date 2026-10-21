@@ -3,83 +3,21 @@
 import Link from "next/link";
 import * as Accordion from "@radix-ui/react-accordion";
 import {
-  ArrowRight,
-  Box,
   Code2,
   FileCode2,
   Hand,
-  Image as ImageIcon,
-  Layers,
   LayoutGrid,
   LayoutTemplate,
   Moon,
-  PenTool,
   Plus,
   Sparkles,
-  Terminal,
   Waves,
 } from "lucide-react";
 import { GithubIcon, MotionIcon, ReactIcon, TailwindIcon } from "./icons";
+import { playgrounds, templatesLink } from "../site";
+import PlaygroundCard from "./PlaygroundCard";
 
 /* ─── Playgrounds ─────────────────────────────── */
-
-const playgrounds = [
-  { href: "/svg", title: "SVG maker", desc: "Draw paths and export animated SVG.", icon: <PenTool size={15} />, art: "svg" },
-  { href: "/shaders", title: "Shaders", desc: "Tweak GPU gradients in real time.", icon: <Sparkles size={15} />, art: "shader" },
-  { href: "/ascii", title: "ASCII animator", desc: "Turn frames into living text art.", icon: <Terminal size={15} />, art: "ascii" },
-  { href: "/isometric", title: "Isometric maker", desc: "Stack blocks on an isometric grid.", icon: <Box size={15} />, art: "iso" },
-  { href: "/shadow", title: "Shadow play", desc: "Layer soft, realistic box shadows.", icon: <Layers size={15} />, art: "shadow" },
-  { href: "/background", title: "Backgrounds", desc: "Dot, grid and gradient patterns.", icon: <ImageIcon size={15} />, art: "bg" },
-  { href: "/css", title: "CSS playground", desc: "Try properties and copy the result.", icon: <Code2 size={15} />, art: "css" },
-  { href: "/templates", title: "Templates", desc: "Bigger compositions, ready to drop in.", icon: <LayoutTemplate size={15} />, art: "tpl" },
-];
-
-function PlaygroundArt({ kind }: { kind: string }) {
-  switch (kind) {
-    case "svg":
-      return (
-        <svg viewBox="0 0 120 60" className="mk-art-svg" aria-hidden>
-          <path d="M8 46 C 30 4, 52 4, 60 30 S 92 58, 112 14" pathLength={1} />
-          <circle cx="8" cy="46" r="3" />
-          <circle cx="112" cy="14" r="3" />
-        </svg>
-      );
-    case "shader":
-      return <div className="mk-art-shader" aria-hidden />;
-    case "ascii":
-      return (
-        <pre className="mk-art-ascii" aria-hidden>
-          {"  .:-=+*#%@\n .:-=+*#%@%\n:-=+*#%@%#*\n-=+*#%@%#*+"}
-        </pre>
-      );
-    case "iso":
-      return (
-        <div className="mk-art-iso" aria-hidden>
-          <span />
-          <span />
-          <span />
-        </div>
-      );
-    case "shadow":
-      return <div className="mk-art-shadow" aria-hidden />;
-    case "bg":
-      return <div className="mk-art-bg" aria-hidden />;
-    case "css":
-      return (
-        <code className="mk-art-css" aria-hidden>
-          <span>transform</span>: scale(<b>0.97</b>);
-        </code>
-      );
-    default:
-      return (
-        <div className="mk-art-tpl" aria-hidden>
-          <span />
-          <span />
-          <span />
-        </div>
-      );
-  }
-}
 
 export function Playgrounds() {
   return (
@@ -96,20 +34,8 @@ export function Playgrounds() {
       </div>
 
       <div className="mk-play-grid">
-        {playgrounds.map((p) => (
-          <Link key={p.href} href={p.href} className="mk-play">
-            <div className="mk-play-art">
-              <PlaygroundArt kind={p.art} />
-            </div>
-            <div className="mk-play-body">
-              <span className="mk-play-icon">{p.icon}</span>
-              <div>
-                <h3 className="mk-card-title">{p.title}</h3>
-                <p className="mk-card-desc">{p.desc}</p>
-              </div>
-              <ArrowRight size={15} className="mk-play-arrow" />
-            </div>
-          </Link>
+        {[...playgrounds, templatesLink].map((p) => (
+          <PlaygroundCard key={p.href} playground={p} />
         ))}
       </div>
     </section>

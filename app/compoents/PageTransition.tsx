@@ -10,13 +10,11 @@ export default function PageTransition({ children }: { children: React.ReactNode
     <AnimatePresence mode="wait">
       <motion.div
         key={pathname}
-        initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
-        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        transition={{
-          duration: 0.6,
-          ease: "easeInOut",
-          staggerChildren: 0.1
-        }}
+        // Opacity only: a transform or filter here would turn this wrapper into
+        // the containing block for every position:fixed element on the page.
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
         className="w-full flex flex-col flex-1"
       >
         {children}
