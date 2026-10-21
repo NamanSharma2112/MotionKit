@@ -1504,6 +1504,12 @@
   transform: scale(0.97);
 }
 
+@media (max-width: 720px) {
+  .mk-search-pill .mk-kbd {
+    display: none;
+  }
+}
+
 @media (min-width: 721px) {
   .mk-search-pill {
     min-width: 200px;
