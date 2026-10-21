@@ -1,0 +1,397 @@
+/* Shader playground — page-specific styles. Shared primitives live in app/ui.css. */
+
+/* ── Stage ─────────────────────────────── */
+.sh-stage-wrap {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .sh-stage-wrap {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+.sh-stage-wrap > .sh-stage {
+  position: absolute;
+  inset: 0;
+  box-shadow: var(--mk-shadow-md);
+  touch-action: pan-y;
+}
+
+/* Fallback "expand" for browsers without the Fullscreen API (iPhone). */
+.sh-stage-wrap > .sh-stage[data-expanded="true"] {
+  position: fixed;
+  z-index: 200;
+  border: 0;
+  border-radius: 0;
+}
+
+.sh-stage:fullscreen {
+  border: 0;
+  border-radius: 0;
+}
+
+.sh-host,
+.sh-gl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.sh-overlay {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.sh-overlay > * {
+  pointer-events: auto;
+}
+
+.sh-overlay-top {
+  top: 12px;
+}
+
+.sh-overlay-bottom {
+  bottom: 12px;
+}
+
+.sh-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.sh-stage .mk-icon-btn {
+  width: 32px;
+  height: 32px;
+}
+
+.sh-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--mk-muted);
+}
+
+/* ── Preset tiles ──────────────────────── */
+.sh-presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 560px) and (max-width: 1024px) {
+  .sh-presets {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* On desktop the list scrolls inside the panel so controls stay near the canvas. */
+@media (min-width: 1025px) {
+  .sh-presets-scroll {
+    max-height: 372px;
+    margin: 0 -10px -10px;
+    padding: 2px 10px 18px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+  }
+}
+
+.sh-thumb {
+  display: block;
+  width: 100%;
+  height: 68px;
+  border-radius: 9px;
+  background: var(--mk-surface-3);
+}
+
+.sh-tile-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
+}
+
+.sh-template {
+  gap: 2px;
+  padding: 10px 8px;
+}
+
+.sh-template .mk-option-desc {
+  margin-top: 0;
+}
+
+/* ── Controls ──────────────────────────── */
+.sh-divider {
+  height: 1px;
+  margin: 16px 0;
+  background: var(--mk-border);
+}
+
+.sh-color {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--mk-muted);
+}
+
+.sh-color-input {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px 0 4px;
+  border-radius: 9px;
+  background: var(--mk-surface-2);
+  border: 1px solid var(--mk-border);
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+
+.sh-color-input:hover {
+  border-color: var(--mk-border-strong);
+}
+
+.sh-color-input:focus-within {
+  border-color: var(--mk-accent);
+  box-shadow: 0 0 0 3px var(--mk-accent-soft);
+}
+
+.sh-color-input input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.sh-color-chip {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Code panel ────────────────────────── */
+.sh-code-head .mk-tabs-wrap {
+  margin-bottom: 0;
+}
+
+.sh-pre {
+  max-height: 440px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ── Editor ────────────────────────────── */
+.sh-editor {
+  --sh-lh: 20px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  height: 440px;
+  border-radius: 12px;
+  background: var(--mk-surface-2);
+  border: 1px solid var(--mk-border);
+  overflow: hidden;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+  line-height: var(--sh-lh);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+/* 16px stops iOS zooming into the field on focus. */
+@media (pointer: coarse) {
+  .sh-editor {
+    --sh-lh: 24px;
+    font-size: 16px;
+  }
+}
+
+.sh-editor:focus-within {
+  border-color: var(--mk-accent);
+  box-shadow: 0 0 0 3px var(--mk-accent-soft);
+}
+
+.sh-gutter {
+  position: relative;
+  overflow: hidden;
+  padding: 12px 0;
+  min-width: 42px;
+  text-align: right;
+  color: var(--mk-faint);
+  border-right: 1px solid var(--mk-border);
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.sh-gutter span {
+  display: block;
+  height: var(--sh-lh);
+  padding: 0 10px 0 12px;
+}
+
+.sh-gutter span[data-error] {
+  color: #e5484d;
+  font-weight: 600;
+}
+
+.sh-code {
+  position: relative;
+  overflow: hidden;
+}
+
+.sh-marks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sh-marks > div {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(12px + var(--ln) * var(--sh-lh));
+  height: var(--sh-lh);
+  background: rgba(229, 72, 77, 0.12);
+}
+
+.sh-textarea {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--mk-text);
+  font: inherit;
+  line-height: var(--sh-lh);
+  white-space: pre;
+  overflow: auto;
+  tab-size: 2;
+  caret-color: var(--mk-accent);
+}
+
+.sh-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--mk-muted);
+}
+
+.sh-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22a35a;
+}
+
+.sh-dot[data-error="true"] {
+  background: #e5484d;
+}
+
+.sh-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.sh-error {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  text-align: left;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c52f33;
+  background: rgba(229, 72, 77, 0.08);
+  border: 1px solid rgba(229, 72, 77, 0.2);
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.dark .sh-error {
+  color: #ff8589;
+}
+
+.sh-error:hover {
+  background: rgba(229, 72, 77, 0.14);
+}
+
+.sh-error:focus-visible {
+  outline: 2px solid var(--mk-accent);
+  outline-offset: 2px;
+}
+
+.sh-error-line {
+  flex: none;
+  font-weight: 600;
+}
+
+.sh-help {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--mk-muted);
+}
+
+.sh-help code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  color: var(--mk-text);
+}
+
+/* ── Mobile order: stage, then whatever you act on next, then the rest ── */
+@media (max-width: 1024px) {
+  .sh-main {
+    display: contents;
+  }
+  .sh-main > *,
+  .sh-side {
+    min-width: 0;
+  }
+  .sh-stage-wrap {
+    order: 1;
+  }
+  .sh-side {
+    order: 2;
+  }
+  .sh-code-panel {
+    order: 3;
+  }
+  .sh-workspace[data-mode="custom"] .sh-code-panel {
+    order: 2;
+  }
+  .sh-workspace[data-mode="custom"] .sh-side {
+    order: 3;
+  }
+}
