@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Moon, Search, Sun } from "lucide-react";
-import AnimatedHeroLogo from "../AnimatedHeroLogo";
+import BrandMark from "./BrandMark";
 import { initTheme, useTheme } from "../theme";
 import { playgrounds, templatesLink } from "../site";
 import { GithubIcon } from "../home/icons";
@@ -109,9 +109,9 @@ export default function SiteHeader() {
         <div className="mk-header-inner">
           <Link href="/" className="mk-brand" aria-label="MotionKit home">
             <span className="mk-brand-mark">
-              <AnimatedHeroLogo />
+              <BrandMark />
             </span>
-            MotionKit
+            <span className="mk-brand-word">MotionKit</span>
           </Link>
 
           <nav className="mk-header-links" aria-label="Primary">
