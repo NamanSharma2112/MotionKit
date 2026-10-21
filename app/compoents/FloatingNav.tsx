@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   motion,
   useMotionValue,
@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Image, Sun, Moon, Layers, PenTool, LayoutDashboard, Sparkles, Box } from "lucide-react";
+import { initTheme, useTheme } from "./theme";
 
 type NavItem = {
   id: string;
@@ -94,31 +95,15 @@ const icons: NavItem[] = [
 export default function FloatingNav() {
   const mouseX = useMotionValue<number>(0);
   const pathname = usePathname();
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { theme, toggle: toggleTheme } = useTheme();
 
+  // The dock lives in the root layout, so it also applies the saved theme.
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-
-    const isDark =
-      savedTheme === "dark" ||
-      (!savedTheme &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches);
-
-    setTheme(isDark ? "dark" : "light");
-
-    document.documentElement.classList.toggle("dark", isDark);
-    document.documentElement.classList.toggle("light", !isDark);
+    initTheme();
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-    document.documentElement.classList.toggle("light", newTheme === "light");
-  };
+  // The homepage has its own top header; the dock only shows on tool pages.
+  if (pathname === "/") return null;
 
   return (
     <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 max-w-[95vw]">
