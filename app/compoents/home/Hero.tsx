@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, LayoutGrid } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { catalog } from "./catalog";
 import { GithubIcon, MotionIcon, NextIcon, ReactIcon, TailwindIcon } from "./icons";
 
@@ -66,13 +66,7 @@ export default function Hero() {
     <section className="mk-hero">
       <div className="mk-hero-glow" aria-hidden />
 
-      <Link href="#svg-gradient-trace" className="mk-pill mk-rise" style={{ "--d": "0ms" } as React.CSSProperties}>
-        <span className="mk-pill-tag">New</span>
-        SVG gradient trace just landed
-        <ArrowRight size={13} className="mk-pill-arrow" />
-      </Link>
-
-      <h1 className="mk-hero-title mk-rise" style={{ "--d": "60ms" } as React.CSSProperties}>
+      <h1 className="mk-hero-title mk-rise" style={{ "--d": "0ms" } as React.CSSProperties}>
         Motion components
         <br />
         for <RotatingWord />

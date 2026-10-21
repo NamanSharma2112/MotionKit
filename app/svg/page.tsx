@@ -490,7 +490,6 @@ export default function SvgStudioPage() {
   return (
     <main className="mk-page">
       <PageHeader
-        icon={<PenTool size={13} />}
         title="SVG studio"
         description="Draw shapes, vectorize an image or turn it into an ASCII pattern, then copy clean JSX or download the SVG."
       >

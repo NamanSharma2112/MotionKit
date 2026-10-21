@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutTemplate } from "lucide-react";
+
 import { editProfileCode } from "../compoents/EditProfileModalCode";
 import { appleAccordionCode } from "../compoents/componentCodes";
 import EditProfileModal from "../compoents/EditProfileModal";
@@ -12,8 +12,6 @@ export default function TemplatesPage() {
   return (
     <main className="mk-page">
       <PageHeader
-        icon={<LayoutTemplate size={13} />}
-        eyebrow="Templates"
         title="Bigger pieces, ready to drop in"
         description="Full-featured UI compositions you can copy and paste straight into your project. Every preview is live, so try it before you take it."
       />

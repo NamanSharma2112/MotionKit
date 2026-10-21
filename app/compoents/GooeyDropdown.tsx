@@ -181,6 +181,9 @@ export function GooDropdown({
     };
   }, [open]);
 
+  // The default fill lifts a little in dark mode so the blob stays visible on dark surfaces.
+  const blobFill = fill === FILL ? "var(--goo-fill)" : fill;
+
   const select = (item: DropdownItem) => {
     item.onClick?.();
     setOpen(false);
@@ -189,7 +192,7 @@ export function GooDropdown({
   return (
     <div
       ref={rootRef}
-      className={`relative select-none ${className ?? ""}`}
+      className={`relative select-none [--goo-fill:#1c1c1e] dark:[--goo-fill:#2c2c31] ${className ?? ""}`}
       style={{ width, height: geo.layerH }}
     >
       {/* Hidden SVG goo filter */}
@@ -211,7 +214,9 @@ export function GooDropdown({
       {/* Goo blob layer */}
       <div
         className="pointer-events-none absolute inset-0"
-        style={{ filter: `url(#${filterId})` }}
+        style={{
+          filter: `url(#${filterId}) drop-shadow(0 1px 1px rgba(0,0,0,0.12)) drop-shadow(0 8px 16px rgba(0,0,0,0.16))`,
+        }}
       >
         {/* Trigger pill */}
         <div
@@ -221,14 +226,14 @@ export function GooDropdown({
             width: BTN_W,
             height: BTN_H,
             borderRadius: buttonRadius,
-            background: fill,
+            background: blobFill,
           }}
         />
         {/* Morphing panel blob */}
         <div
           ref={panelRef}
           className="absolute inset-0"
-          style={{ background: fill, clipPath: closedShape }}
+          style={{ background: blobFill, clipPath: closedShape }}
         />
       </div>
 
@@ -239,7 +244,8 @@ export function GooDropdown({
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="absolute top-0 flex items-center justify-center gap-1.5 text-[13px] font-semibold tracking-[0.01em] text-white/90 transition-opacity hover:text-white active:opacity-70"
+          aria-haspopup="menu"
+          className="absolute top-0 flex items-center justify-center gap-1.5 text-[13px] font-semibold text-white/90 outline-none transition-[color,opacity] duration-150 hover:text-white focus-visible:ring-2 focus-visible:ring-[#1f6bff]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white active:opacity-70 dark:focus-visible:ring-offset-neutral-900"
           style={{
             left: geo.btnX,
             width: BTN_W,
@@ -250,6 +256,7 @@ export function GooDropdown({
           <svg
             width="14" height="14" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+            aria-hidden
           >
             <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
             <polyline points="16 6 12 2 8 6"/>
@@ -283,11 +290,12 @@ export function GooDropdown({
                 type="button"
                 tabIndex={open ? 0 : -1}
                 onClick={() => select(item)}
-                style={{ height: itemHeight }}
-                className="flex w-full items-center gap-2.5 rounded-[14px] px-3.5 text-left text-[13.5px] font-medium text-white/60 transition-all duration-150 hover:bg-white/10 hover:text-white"
+                // Inner radius follows the panel's so the corners stay concentric.
+                style={{ height: itemHeight, borderRadius: Math.max(panelRadius - PANEL_PAD, 4) }}
+                className="group flex w-full items-center gap-2.5 px-3 text-left text-[13.5px] font-medium text-white/70 outline-none transition-colors duration-150 hover:bg-white/[0.08] hover:text-white focus-visible:bg-white/[0.08] focus-visible:text-white"
               >
                 {item.icon && (
-                  <span className="text-white/40 transition-colors group-hover:text-white/70">
+                  <span aria-hidden className="flex size-4 items-center justify-center text-white/45 transition-colors duration-150 group-hover:text-white/80 group-focus-visible:text-white/80">
                     {item.icon}
                   </span>
                 )}

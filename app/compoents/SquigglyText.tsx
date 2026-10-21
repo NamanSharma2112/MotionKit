@@ -61,6 +61,7 @@ export default function SquigglyText({
           fontWeight: 700,
           fontSize: "inherit",
           lineHeight: 1.2,
+          letterSpacing: "-0.01em",
           color: "inherit",
         }}
       >
@@ -78,6 +79,13 @@ export default function SquigglyText({
         }
         .squiggly-wavy-${uid} {
           animation: squiggly-anim-${uid} ${speed}s linear infinite;
+        }
+        /* Reduced motion: keep the hand-drawn look, drop the constant wobble. */
+        @media (prefers-reduced-motion: reduce) {
+          .squiggly-wavy-${uid} {
+            animation: none;
+            filter: url(#squiggly-${uid}-0);
+          }
         }
       `}</style>
     </>

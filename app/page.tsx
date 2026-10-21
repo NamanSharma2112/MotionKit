@@ -7,6 +7,7 @@ import ComponentGrid from "./compoents/home/ComponentGrid";
 import Spotlight from "./compoents/home/Spotlight";
 import { ClosingCta, Faq, Playgrounds, Principles } from "./compoents/home/Sections";
 import { GithubIcon } from "./compoents/home/icons";
+import { TweakRoot } from "./compoents/home/tweak";
 
 export default function Home() {
   return (
@@ -50,6 +51,7 @@ export default function Home() {
         <Faq />
         <ClosingCta />
       </main>
+      <TweakRoot />
 
     </div>
   );

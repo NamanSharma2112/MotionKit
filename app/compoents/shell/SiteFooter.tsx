@@ -1,5 +1,5 @@
 import Link from "next/link";
-import AnimatedHeroLogo from "../AnimatedHeroLogo";
+import BrandMark from "./BrandMark";
 import { playgrounds, templatesLink } from "../site";
 
 export default function SiteFooter() {
@@ -9,9 +9,9 @@ export default function SiteFooter() {
         <div className="mk-site-footer-brand">
           <Link href="/" className="mk-brand">
             <span className="mk-brand-mark">
-              <AnimatedHeroLogo />
+              <BrandMark />
             </span>
-            MotionKit
+            <span className="mk-brand-word">MotionKit</span>
           </Link>
           <p className="mk-card-desc">
             Hand-tuned React animations and playgrounds. Copy a file, paste it, ship it.

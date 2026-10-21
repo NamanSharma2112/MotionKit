@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 /* ─── types ─── */
 
@@ -17,6 +17,8 @@ interface LetterSwapProps {
   damping?: number;
   namespace?: string;
   trigger?: number;
+  /** Full spring for the letter glide; overrides stiffness/damping when set. */
+  spring?: { stiffness?: number; damping?: number; mass?: number; visualDuration?: number; bounce?: number };
 }
 
 /* ─── helpers ─── */
@@ -46,10 +48,12 @@ export default function LetterSwap({
   damping = 18,
   namespace = "ls",
   trigger,
+  spring,
 }: LetterSwapProps) {
   const [index, setIndex] = useState(0);
-
-  const mounted = useRef(false);
+  const [prevTrigger, setPrevTrigger] = useState(trigger);
+  const reduceMotion = useReducedMotion();
+  const rise = reduceMotion ? 0 : 12;
 
   /* auto cycle */
   useEffect(() => {
@@ -62,21 +66,20 @@ export default function LetterSwap({
     return () => clearInterval(timer);
   }, [interval, words.length]);
 
-  /* external trigger */
-  useEffect(() => {
-    if (!mounted.current) {
-      mounted.current = true;
-      return;
-    }
-
+  /* external trigger: advance one word each time it changes */
+  if (trigger !== prevTrigger) {
+    setPrevTrigger(trigger);
     if (trigger !== undefined) {
       setIndex((prev) => (prev + 1) % words.length);
     }
-  }, [trigger, words.length]);
+  }
+
+  // Stay in range if the list of words shrinks while running.
+  const word = words[index % words.length] ?? "";
 
   const letters = useMemo(
-    () => tagWord(words[index], namespace),
-    [words, index, namespace]
+    () => tagWord(word, namespace),
+    [word, namespace]
   );
 
   return (
@@ -85,21 +88,26 @@ export default function LetterSwap({
         display: "inline-flex",
         overflow: "hidden",
         alignItems: "center",
+        // Room for descenders and the vertical travel, so glyphs aren't clipped.
+        paddingBlock: "0.12em",
       }}
     >
+      <span className="sr-only">{word}</span>
       <AnimatePresence mode="popLayout" initial={false}>
         {letters.map(({ id, glyph }) => (
           <motion.span
-            key={`${words[index]}-${id}`}
+            key={`${word}-${id}`}
             layoutId={id}
+            aria-hidden
             style={{
               display: "inline-block",
-              fontWeight: 700,
+              fontWeight: 600,
               lineHeight: 1,
+              whiteSpace: "pre",
             }}
             initial={{
               opacity: 0,
-              y: 12,
+              y: rise,
             }}
             animate={{
               opacity: 1,
@@ -107,10 +115,10 @@ export default function LetterSwap({
             }}
             exit={{
               opacity: 0,
-              y: -12,
+              y: -rise,
             }}
             transition={{
-              layout: {
+              layout: spring ? { type: "spring", ...spring } : {
                 type: "spring",
                 stiffness,
                 damping,

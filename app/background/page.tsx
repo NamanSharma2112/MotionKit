@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Image as ImageIcon, Lightbulb, Plus, Type, X } from "lucide-react";
+import { Lightbulb, Plus, Type, X } from "lucide-react";
 import PageHeader from "../compoents/ui/PageHeader";
 import SegmentedTabs from "../compoents/ui/SegmentedTabs";
 import MorePlaygrounds from "../compoents/ui/MorePlaygrounds";
@@ -161,7 +161,7 @@ export default function BackgroundPage() {
 
   return (
     <main className="mk-page">
-      <PageHeader icon={<ImageIcon size={13} />} title="Background playground" description="Gradients, meshes and subtle grid patterns. Pick a preset or build your own, then copy CSS or Tailwind classes.">
+      <PageHeader title="Background playground" description="Gradients, meshes and subtle grid patterns. Pick a preset or build your own, then copy CSS or Tailwind classes.">
         <SegmentedTabs
           label="Background type"
           value={kind}

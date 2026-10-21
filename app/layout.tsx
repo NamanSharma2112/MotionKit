@@ -13,10 +13,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const description =
+  "Hand-tuned React animations you can copy, paste and ship, plus playgrounds for SVG, shaders, ASCII and more.";
+
 export const metadata: Metadata = {
-  title: "MotionKit — Motion components for React",
-  description:
-    "Hand-tuned React animations you can copy, paste and ship, plus playgrounds for SVG, shaders, ASCII and more.",
+  metadataBase: new URL("https://www.motionlib.me"),
+  title: {
+    default: "MotionKit — Motion components for React",
+    template: "%s — MotionKit",
+  },
+  description,
+  openGraph: {
+    type: "website",
+    siteName: "MotionKit",
+    title: "MotionKit — Motion components for React",
+    description,
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MotionKit — Motion components for React",
+    description,
+  },
 };
 
 import SiteHeader from "./compoents/shell/SiteHeader";

@@ -19,39 +19,39 @@ const columns: { offset: number; tiles: Tile[] }[] = [
   {
     offset: 56,
     tiles: [
-      { slug: "staggered-list", label: "Inbox", meta: "4 new", height: 250, scale: 0.85 },
-      { slug: "bunny-mascot", label: "Mascot", height: 230, scale: 0.75 },
+      { slug: "staggered-list", label: "Staggered list", meta: "80ms stagger", height: 250, scale: 0.85 },
+      { slug: "bunny-mascot", label: "Bunny mascot", height: 230, scale: 0.75 },
     ],
   },
   {
     offset: 0,
     tiles: [
-      { slug: "play-pause-morph", label: "Now playing", meta: "02:14", height: 200 },
-      { slug: "character-counter", label: "Compose", meta: "280 max", height: 210, scale: 0.6 },
-      { slug: "smooth-button", label: "Sign in", height: 150 },
+      { slug: "play-pause-morph", label: "Play / pause", meta: "spring 300/22", height: 200 },
+      { slug: "character-counter", label: "Character counter", meta: "12 max", height: 210, scale: 0.6 },
+      { slug: "smooth-button", label: "Smooth button", height: 150 },
     ],
   },
   {
     offset: 28,
     tiles: [
-      { slug: "letter-swap", label: "Headline", meta: "Spring 120 / 18", height: 190 },
-      { slug: "animated-counter", label: "Copies this week", meta: "+14.8%", height: 250, scale: 0.75 },
-      { slug: "gooey-search", label: "Search", height: 130, scale: 0.8 },
+      { slug: "letter-swap", label: "Letter swap", meta: "spring 120/18", height: 190 },
+      { slug: "animated-counter", label: "Animated counter", meta: "2s ease-out", height: 250, scale: 0.75 },
+      { slug: "gooey-search", label: "Gooey search", height: 130, scale: 0.8 },
     ],
   },
   {
     offset: 0,
     tiles: [
-      { slug: "gooey-dropdown", label: "Actions", height: 260 },
-      { slug: "typewriter", label: "Typing", height: 150, scale: 0.7 },
-      { slug: "text-scramble", label: "Decode", height: 150, scale: 0.8 },
+      { slug: "gooey-dropdown", label: "Gooey dropdown", height: 260 },
+      { slug: "typewriter", label: "Typewriter", height: 150, scale: 0.7 },
+      { slug: "text-scramble", label: "Text scramble", height: 150, scale: 0.8 },
     ],
   },
   {
     offset: 64,
     tiles: [
-      { slug: "squiggly-text", label: "Wobble", height: 190 },
-      { slug: "magnetic-button", label: "Magnetic", height: 210, scale: 0.7 },
+      { slug: "squiggly-text", label: "Squiggly text", height: 190 },
+      { slug: "magnetic-button", label: "Magnetic button", height: 210, scale: 0.7 },
     ],
   },
 ];
@@ -84,7 +84,7 @@ export default function HeroCollage() {
                       className="mk-card-stage"
                       style={t.scale ? { transform: `scale(${t.scale})` } : undefined}
                     >
-                      {item.render(0)}
+                      {item.render(item.props)}
                     </div>
                   </div>
                 </div>
