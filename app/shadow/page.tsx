@@ -1,514 +1,640 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { motion } from "motion/react";
-import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Check,
+  Copy,
+  CopyPlus,
+  Eye,
+  EyeOff,
+  Layers,
+  MousePointerClick,
+  PanelTop,
+  Plus,
+  RotateCcw,
+  SunMedium,
+  Tag,
+  TextCursorInput,
+  Trash2,
+  UserRound,
+  Wand2,
+} from "lucide-react";
+import PageHeader from "../compoents/ui/PageHeader";
+import SegmentedTabs from "../compoents/ui/SegmentedTabs";
+import MorePlaygrounds from "../compoents/ui/MorePlaygrounds";
+import PreviewElement from "./PreviewElement";
+import { ColorRow, Range } from "./controls";
+import {
+  BORDER_SWATCHES,
+  DEFAULT_PRESET,
+  MAX_DIST,
+  PRESETS,
+  SURFACE_SWATCHES,
+  SWATCHES,
+  aimLayers,
+  borderCss,
+  boxShadow,
+  buildCss,
+  buildTailwind,
+  newId,
+  primaryOffset,
+  px,
+  scaleLayers,
+  smoothLayers,
+  withIds,
+  type Border,
+  type BorderStyle,
+  type Layer,
+  type Paint,
+  type Preset,
+  type PreviewKind,
+  type SmoothParams,
+} from "./shadow-lib";
 
+const EASE = [0.23, 1, 0.32, 1] as const;
 
-// ── types ──────────────────────────────────────────────
-interface ShadowConfig {
-    offsetX: number;
-    offsetY: number;
-    blur: number;
-    spread: number;
-    color: string;
-    opacity: number;
-    inset: boolean;
-}
-
-interface BorderConfig {
-    width: number;
-    style: "solid" | "dashed" | "dotted" | "double" | "none";
-    color: string;
-    radius: number;
-}
-
-type PreviewTarget = "button" | "card" | "input" | "badge";
-
-const FOOTER_LINKS = [
-    { label: "Home", href: "/" },
-    { label: "Components", href: "/components" },
-    { label: "GitHub", href: "https://github.com/NamanSharma2112" },
+const KINDS: { value: PreviewKind; label: string; icon: React.ReactNode }[] = [
+  { value: "button", label: "Button", icon: <MousePointerClick size={15} /> },
+  { value: "card", label: "Card", icon: <PanelTop size={15} /> },
+  { value: "input", label: "Input", icon: <TextCursorInput size={15} /> },
+  { value: "badge", label: "Badge", icon: <Tag size={15} /> },
+  { value: "profile", label: "Profile", icon: <UserRound size={15} /> },
 ];
 
-// ── helpers ──────────────────────────────────────────────
-function hexToRgba(hex: string, opacity: number): string {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r},${g},${b},${opacity.toFixed(2)})`;
+const BORDER_STYLES: BorderStyle[] = ["none", "solid", "dashed", "dotted", "double"];
+const BG_SWATCHES = ["#ffffff", "#f4f4f5", "#e0e5ec", "#111113", "#1f2937"];
+
+const INITIAL_LAYERS = withIds(DEFAULT_PRESET.layers, "init");
+const DEFAULT_SMOOTH: SmoothParams = { count: 5, distance: 24, softness: 1.6, darkness: 0.28, color: "#0b0b0c" };
+
+/** Canvas size via ResizeObserver (used to place the light-source handle). */
+function useSize<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setSize({ w: e.contentRect.width, h: e.contentRect.height }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, size] as const;
 }
 
-function buildBoxShadow(s: ShadowConfig): string {
-    const color = hexToRgba(s.color, s.opacity);
-    return `${s.inset ? "inset " : ""}${s.offsetX}px ${s.offsetY}px ${s.blur}px ${s.spread}px ${color}`;
-}
-
-function buildBorder(b: BorderConfig): string {
-    if (b.style === "none") return "none";
-    return `${b.width}px ${b.style} ${b.color}`;
-}
-
-function buildCSS(shadow: ShadowConfig, border: BorderConfig): string {
-    const lines: string[] = [];
-    lines.push(`box-shadow: ${buildBoxShadow(shadow)};`);
-    if (border.style !== "none") {
-        lines.push(`border: ${buildBorder(border)};`);
+function useCopy() {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const copy = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      return;
     }
-    if (border.radius > 0) {
-        lines.push(`border-radius: ${border.radius}px;`);
-    }
-    return lines.join("\n");
+    setCopied(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setCopied(false), 1600);
+  }, []);
+  return [copied, copy] as const;
 }
 
-// ── slider component ──────────────────────────────────────────────
-function Slider({
-    label,
-    value,
-    min,
-    max,
-    step = 1,
-    onChange,
-    unit = "px",
-}: {
-    label: string;
-    value: number;
-    min: number;
-    max: number;
-    step?: number;
-    onChange: (v: number) => void;
-    unit?: string;
-}) {
-    return (
-        <div className="flex flex-col gap-1">
-            <div className="flex justify-between items-center">
-                <label className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                    {label}
-                </label>
-                <span className="text-[11px] font-mono text-zinc-700 dark:text-zinc-300 tabular-nums">
-                    {value}
-                    {unit}
-                </span>
-            </div>
-            <input
-                type="range"
-                min={min}
-                max={max}
-                step={step}
-                value={value}
-                onChange={(e) => onChange(Number(e.target.value))}
-                className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-500 bg-zinc-200 dark:bg-zinc-700"
-            />
-        </div>
-    );
-}
-
-// ── color swatch picker ──────────────────────────────────────────────
-function ColorPicker({
-    label,
-    value,
-    onChange,
-}: {
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-}) {
-    const SWATCHES = [
-        "#000000", "#ffffff", "#ef4444", "#f97316", "#eab308",
-        "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6",
-    ];
-    return (
-        <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                {label}
-            </label>
-            <div className="flex items-center gap-2 flex-wrap">
-                {SWATCHES.map((c) => (
-                    <button
-                        key={c}
-                        onClick={() => onChange(c)}
-                        title={c}
-                        className="w-5 h-5 rounded-full border-2 transition-transform hover:scale-110 flex-shrink-0"
-                        style={{
-                            background: c,
-                            borderColor: value === c ? "#8b5cf6" : "transparent",
-                            outline: value === c ? "2px solid #8b5cf6" : "none",
-                            outlineOffset: "1px",
-                        }}
-                    />
-                ))}
-                <input
-                    type="color"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="w-5 h-5 rounded-full cursor-pointer border-0 bg-transparent p-0"
-                    title="Custom colour"
-                />
-            </div>
-        </div>
-    );
-}
-
-// ── preview components ──────────────────────────────────────────────
-function PreviewButton({
-    boxShadow,
-    border,
-    borderRadius,
-}: {
-    boxShadow: string;
-    border: string;
-    borderRadius: number;
-}) {
-    return (
-        <button
-            className="px-6 py-3 font-medium text-sm bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 transition-all duration-200 cursor-default select-none"
-            style={{ boxShadow, border, borderRadius }}
-        >
-            Click me
-        </button>
-    );
-}
-
-function PreviewCard({
-    boxShadow,
-    border,
-    borderRadius,
-}: {
-    boxShadow: string;
-    border: string;
-    borderRadius: number;
-}) {
-    return (
-        <div
-            className="w-52 p-4 bg-white dark:bg-zinc-900 transition-all duration-200"
-            style={{ boxShadow, border, borderRadius }}
-        >
-            <div className="w-full h-2 rounded bg-zinc-200 dark:bg-zinc-700 mb-3" />
-            <div className="w-3/4 h-2 rounded bg-zinc-100 dark:bg-zinc-800 mb-2" />
-            <div className="w-1/2 h-2 rounded bg-zinc-100 dark:bg-zinc-800" />
-        </div>
-    );
-}
-
-function PreviewInput({
-    boxShadow,
-    border,
-    borderRadius,
-}: {
-    boxShadow: string;
-    border: string;
-    borderRadius: number;
-}) {
-    return (
-        <input
-            type="text"
-            placeholder="Type something…"
-            className="px-4 py-2.5 text-sm bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 outline-none w-56 transition-all duration-200"
-            style={{ boxShadow, border, borderRadius }}
-            readOnly
-        />
-    );
-}
-
-function PreviewBadge({
-    boxShadow,
-    border,
-    borderRadius,
-}: {
-    boxShadow: string;
-    border: string;
-    borderRadius: number;
-}) {
-    return (
+function PresetTile({ preset, active, onPick }: { preset: Preset; active: boolean; onPick: () => void }) {
+  const layers = scaleLayers(withIds(preset.layers, "p"), 0.45);
+  const bg = !preset.background || preset.background === "auto" ? "var(--mk-surface-2)" : preset.background;
+  const surface = !preset.surface || preset.surface === "auto" ? "var(--sh-el, var(--mk-surface))" : preset.surface;
+  return (
+    <button type="button" className="mk-option" data-active={active} onClick={onPick}>
+      <span className="grid h-[60px] place-items-center rounded-[10px]" style={{ background: bg }}>
         <span
-            className="px-3 py-1 text-xs font-semibold bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300 transition-all duration-200"
-            style={{ boxShadow, border, borderRadius }}
-        >
-            New ✦
-        </span>
-    );
+          className="h-7 w-11"
+          style={{
+            background: surface,
+            boxShadow: boxShadow(layers),
+            border: preset.border.style === "none" ? "none" : `${Math.max(1, preset.border.width * 0.6)}px ${preset.border.style === "double" ? "solid" : preset.border.style} ${preset.border.color}`,
+            borderRadius: preset.border.radius * 0.5,
+          }}
+        />
+      </span>
+      <span className="mk-option-title">{preset.name}</span>
+      <span className="mk-option-desc">{preset.desc}</span>
+    </button>
+  );
 }
 
-// ── main page ──────────────────────────────────────────────
 export default function ShadowPage() {
-    const [shadow, setShadow] = useState<ShadowConfig>({
-        offsetX: 4,
-        offsetY: 8,
-        blur: 24,
-        spread: 0,
-        color: "#8b5cf6",
-        opacity: 0.35,
-        inset: false,
+  const reduce = useReducedMotion();
+
+  const [layers, setLayers] = useState<Layer[]>(INITIAL_LAYERS);
+  const [selectedId, setSelectedId] = useState<string | null>(INITIAL_LAYERS[INITIAL_LAYERS.length - 1].id);
+  const [border, setBorder] = useState<Border>(DEFAULT_PRESET.border);
+  const [kind, setKind] = useState<PreviewKind>("card");
+  const [background, setBackground] = useState<Paint>("auto");
+  const [surface, setSurface] = useState<Paint>("auto");
+  const [presetName, setPresetName] = useState<string | null>(DEFAULT_PRESET.name);
+  const [lightOn, setLightOn] = useState(false);
+  const [angle, setAngle] = useState(Math.PI / 2); // shadow direction, radians
+  const [smooth, setSmooth] = useState<SmoothParams>(DEFAULT_SMOOTH);
+  const [tab, setTab] = useState<"css" | "tailwind">("css");
+  const [easeChanges, setEaseChanges] = useState(false);
+  const easeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [copied, copy] = useCopy();
+
+  const [canvasRef, size] = useSize<HTMLDivElement>();
+  const drag = useRef<{ base: Layer[] } | null>(null);
+
+  useEffect(() => () => clearTimeout(easeTimer.current), []);
+
+  /** Animate the shadow only for discrete jumps (presets, reset), never while dragging. */
+  const softly = () => {
+    if (reduce) return;
+    setEaseChanges(true);
+    clearTimeout(easeTimer.current);
+    easeTimer.current = setTimeout(() => setEaseChanges(false), 320);
+  };
+
+  const editLayers = (fn: (l: Layer[]) => Layer[]) => {
+    setLayers(fn);
+    setPresetName(null);
+  };
+  const editBorder = <K extends keyof Border>(key: K, v: Border[K]) => {
+    setBorder((b) => ({ ...b, [key]: v }));
+    setPresetName(null);
+  };
+
+  const selected = layers.find((l) => l.id === selectedId) ?? null;
+  const selectedIndex = selected ? layers.indexOf(selected) : -1;
+
+  const updateSelected = <K extends keyof Layer>(key: K, v: Layer[K]) =>
+    editLayers((ls) => ls.map((l) => (l.id === selectedId ? { ...l, [key]: v } : l)));
+
+  const applyPreset = (p: Preset) => {
+    const next = withIds(p.layers);
+    softly();
+    setLayers(next);
+    setSelectedId(next[next.length - 1]?.id ?? null);
+    setBorder(p.border);
+    setSurface(p.surface ?? "auto");
+    setBackground(p.background ?? "auto");
+    setPresetName(p.name);
+    const o = primaryOffset(next);
+    if (o && o.dist > 0) setAngle(o.angle);
+  };
+
+  const addLayer = () => {
+    const l: Layer = { id: newId(), x: 0, y: 6, blur: 16, spread: -4, opacity: 0.12, color: "#0b0b0c", inset: false, visible: true };
+    editLayers((ls) => {
+      const at = selectedIndex >= 0 ? selectedIndex + 1 : ls.length;
+      return [...ls.slice(0, at), l, ...ls.slice(at)];
     });
-
-    const [border, setBorder] = useState<BorderConfig>({
-        width: 1,
-        style: "solid",
-        color: "#e4e4e7",
-        radius: 10,
+    setSelectedId(l.id);
+  };
+  const duplicateLayer = () => {
+    if (!selected) return;
+    const l = { ...selected, id: newId() };
+    editLayers((ls) => [...ls.slice(0, selectedIndex + 1), l, ...ls.slice(selectedIndex + 1)]);
+    setSelectedId(l.id);
+  };
+  const deleteLayer = () => {
+    if (!selected) return;
+    const rest = layers.filter((l) => l.id !== selected.id);
+    editLayers(() => rest);
+    setSelectedId(rest[Math.min(selectedIndex, rest.length - 1)]?.id ?? null);
+  };
+  const moveLayer = (dir: -1 | 1) => {
+    const to = selectedIndex + dir;
+    if (selectedIndex < 0 || to < 0 || to >= layers.length) return;
+    editLayers((ls) => {
+      const next = [...ls];
+      [next[selectedIndex], next[to]] = [next[to], next[selectedIndex]];
+      return next;
     });
+  };
 
-    const [target, setTarget] = useState<PreviewTarget>("button");
-    const [copied, setCopied] = useState(false);
+  const updateSmooth = <K extends keyof SmoothParams>(key: K, v: SmoothParams[K]) => {
+    const params = { ...smooth, [key]: v };
+    setSmooth(params);
+    const next = withIds(smoothLayers(params, angle));
+    setLayers(next);
+    setSelectedId(next[next.length - 1].id);
+    setPresetName(null);
+  };
 
-    const updateShadow = useCallback(
-        <K extends keyof ShadowConfig>(key: K, val: ShadowConfig[K]) =>
-            setShadow((p) => ({ ...p, [key]: val })),
-        []
-    );
+  const reset = () => applyPreset(DEFAULT_PRESET);
 
-    const updateBorder = useCallback(
-        <K extends keyof BorderConfig>(key: K, val: BorderConfig[K]) =>
-            setBorder((p) => ({ ...p, [key]: val })),
-        []
-    );
+  /* ── light source ─────────────────────────────── */
+  // The handle travels on an ellipse that fits the canvas; INNER keeps it clear of the element.
+  const Rx = Math.max(60, size.w / 2 - 28);
+  const Ry = Math.max(60, size.h / 2 - 28);
+  const INNER = 0.55;
+  const primary = primaryOffset(layers);
+  const shadowAngle = primary && primary.dist > 0.01 ? primary.angle : angle;
+  const dist = primary?.dist ?? 0;
+  const lightDir = shadowAngle + Math.PI;
+  const edge = 1 / Math.hypot(Math.cos(lightDir) / Rx, Math.sin(lightDir) / Ry);
+  const handleR = edge * (INNER + Math.min(dist / MAX_DIST, 1) * (1 - INNER));
+  const handle = { x: size.w / 2 + Math.cos(lightDir) * handleR, y: size.h / 2 + Math.sin(lightDir) * handleR };
+  const degrees = Math.round((((shadowAngle * 180) / Math.PI) % 360 + 360) % 360);
 
-    const boxShadowValue = buildBoxShadow(shadow);
-    const borderValue = buildBorder(border);
-    const cssOutput = buildCSS(shadow, border);
+  const aim = (base: Layer[], a: number, d: number) => {
+    const clamped = Math.max(1, Math.min(MAX_DIST, d));
+    setLayers(aimLayers(base, a, clamped));
+    setAngle(a);
+    setPresetName(null);
+  };
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(cssOutput);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+  const onHandleDown = (e: PointerEvent<HTMLButtonElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drag.current = { base: layers };
+  };
+  const onHandleMove = (e: PointerEvent<HTMLButtonElement>) => {
+    if (!drag.current || !canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const vx = e.clientX - (rect.left + rect.width / 2);
+    const vy = e.clientY - (rect.top + rect.height / 2);
+    const f = Math.hypot(vx / Rx, vy / Ry);
+    const d = ((f - INNER) / (1 - INNER)) * MAX_DIST;
+    aim(drag.current.base, Math.atan2(vy, vx) + Math.PI, d);
+  };
+  const onHandleUp = () => {
+    drag.current = null;
+  };
+  const onHandleKey = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const step = (10 * Math.PI) / 180;
+    const map: Record<string, [number, number]> = {
+      ArrowLeft: [-step, 0],
+      ArrowRight: [step, 0],
+      ArrowUp: [0, 2],
+      ArrowDown: [0, -2],
     };
+    const m = map[e.key];
+    if (!m) return;
+    e.preventDefault();
+    aim(layers, shadowAngle + m[0], Math.max(1, dist) + m[1]);
+  };
 
-    const TARGETS: PreviewTarget[] = ["button", "card", "input", "badge"];
+  /* ── output ───────────────────────────────────── */
+  const css = useMemo(() => buildCss(layers, border), [layers, border]);
+  const tw = useMemo(() => buildTailwind(layers, border), [layers, border]);
+  const code = tab === "css" ? css : tw;
+  const visibleCount = layers.filter((l) => l.visible).length;
 
-    const previewProps = {
-        boxShadow: boxShadowValue,
-        border: borderValue,
-        borderRadius: border.radius,
-    };
+  const elementStyle: CSSProperties = {
+    boxShadow: boxShadow(layers),
+    border: borderCss(border),
+    borderRadius: border.radius,
+    transition: easeChanges
+      ? "box-shadow 280ms var(--ease-out), border-radius 280ms var(--ease-out), border-color 200ms ease, background-color 200ms ease"
+      : undefined,
+  };
 
-    return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.05 }}
-            className="min-h-screen"
-        >
-            <main className="relative max-w-[900px] mx-auto px-8 pt-14 pb-0 text-zinc-800 dark:text-zinc-200 leading-[1.7] antialiased border-l border-r border-dashed border-zinc-200 dark:border-zinc-800">
-                {/* Header */}
-                <header className="mb-10 animate-[fadeUp_0.7s_cubic-bezier(0.22,1,0.36,1)_0.05s_backwards]">
-                    <div className="flex items-center justify-between mb-1">
-                        <h1 className="text-base font-medium tracking-tight text-zinc-900 dark:text-zinc-100">
-                            Shadow Studio
-                        </h1>
-                        <Link
-                            href="/"
-                            className="inline-flex items-center gap-1.5 text-[13px] text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors duration-200 no-underline"
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M19 12H5" />
-                                <polyline points="12 19 5 12 12 5" />
-                            </svg>
-                            Back home
-                        </Link>
-                    </div>
-                    <p className="text-[13px] text-zinc-400 font-normal">
-                        Visually design box-shadows and borders. Copy the CSS when you&apos;re happy.
-                    </p>
-                </header>
+  const canvasBg: CSSProperties = background === "auto" ? {} : { backgroundColor: background };
 
-                {/* Main canvas */}
-                <div className="animate-[fadeUp_0.7s_cubic-bezier(0.22,1,0.36,1)_0.1s_backwards] grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 mb-10">
+  return (
+    <main className="mk-page">
+      <PageHeader
+        icon={<Layers size={13} />}
+        title="Shadow studio"
+        description="Stack soft, realistic box shadows layer by layer, aim them with a light source, then copy the CSS or Tailwind class."
+      />
 
-                    {/* ── Preview pane ── */}
-                    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.04),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.08),transparent_70%)] overflow-hidden">
-                        {/* target tabs */}
-                        <div className="flex border-b border-zinc-200 dark:border-zinc-800 px-4 pt-3">
-                            {TARGETS.map((t) => (
-                                <button
-                                    key={t}
-                                    onClick={() => setTarget(t)}
-                                    className={`px-3 py-1.5 text-[12px] font-medium capitalize rounded-t-md transition-colors -mb-px ${target === t
-                                        ? "text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 border-b-white dark:border-b-zinc-900 bg-white dark:bg-zinc-900"
-                                        : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 border border-transparent"
-                                        }`}
-                                >
-                                    {t}
-                                </button>
-                            ))}
-                        </div>
+      <div className="mk-workspace">
+        {/* ── Left: preview + output ── */}
+        <div className="mk-stack-col lg:sticky lg:top-20">
+          <div className="mk-toolbar" role="toolbar" aria-label="Preview">
+            {KINDS.map((k) => (
+              <button
+                key={k.value}
+                type="button"
+                className="mk-tool"
+                data-active={kind === k.value}
+                aria-pressed={kind === k.value}
+                onClick={() => setKind(k.value)}
+              >
+                {k.icon}
+                <span className="max-sm:hidden">{k.label}</span>
+              </button>
+            ))}
+            <span className="mk-toolbar-sep" />
+            <button
+              type="button"
+              className="mk-tool"
+              data-active={lightOn}
+              aria-pressed={lightOn}
+              onClick={() => setLightOn((v) => !v)}
+              title="Drag the light to aim every layer"
+            >
+              <SunMedium size={15} />
+              <span className="max-sm:hidden">Light source</span>
+            </button>
+            <button type="button" className="mk-tool ml-auto" onClick={reset} aria-label="Reset" title="Reset">
+              <RotateCcw size={15} />
+            </button>
+          </div>
 
-                        {/* preview canvas */}
-                        <div
-                            className="flex items-center justify-center"
-                            style={{
-                                minHeight: 280,
-                                backgroundImage:
-                                    "radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px)",
-                                backgroundSize: "20px 20px",
-                            }}
-                        >
-                            <motion.div
-                                key={target}
-                                initial={{ opacity: 0, scale: 0.92 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.25 }}
-                            >
-                                {target === "button" && <PreviewButton {...previewProps} />}
-                                {target === "card" && <PreviewCard {...previewProps} />}
-                                {target === "input" && <PreviewInput {...previewProps} />}
-                                {target === "badge" && <PreviewBadge {...previewProps} />}
-                            </motion.div>
-                        </div>
+          <div
+            ref={canvasRef}
+            className="mk-canvas grid [--sh-el:var(--mk-surface)] dark:[--sh-el:#26262b] h-[clamp(300px,calc(100vh-480px),440px)] place-items-center max-sm:h-[340px]"
+            style={canvasBg}
+          >
+            <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5">
+              <span className="mk-badge">
+                {visibleCount} {visibleCount === 1 ? "layer" : "layers"}
+              </span>
+              {lightOn && (
+                <span className="mk-badge">
+                  {degrees}° · {px(dist)}
+                </span>
+              )}
+            </div>
 
-                        {/* CSS output */}
-                        <div className="border-t border-zinc-200 dark:border-zinc-800 p-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
-                                    Generated CSS
-                                </span>
-                                <button
-                                    onClick={handleCopy}
-                                    className="text-[11px] font-medium text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 transition-colors flex items-center gap-1"
-                                >
-                                    {copied ? (
-                                        <>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
-                                            Copied!
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                                            Copy CSS
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                            <pre className="font-mono text-[12px] text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-950 rounded-lg p-3 overflow-x-auto leading-relaxed whitespace-pre-wrap">
-                                {cssOutput}
-                            </pre>
-                        </div>
-                    </div>
+            {lightOn && size.w > 0 && (
+              <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+                <ellipse
+                  cx={size.w / 2}
+                  cy={size.h / 2}
+                  rx={Rx}
+                  ry={Ry}
+                  fill="none"
+                  stroke="var(--mk-border-strong)"
+                  strokeDasharray="3 5"
+                />
+                <line
+                  x1={size.w / 2}
+                  y1={size.h / 2}
+                  x2={handle.x}
+                  y2={handle.y}
+                  stroke="var(--mk-accent)"
+                  strokeOpacity={0.5}
+                  strokeWidth={1.5}
+                  strokeDasharray="4 4"
+                />
+              </svg>
+            )}
 
-                    {/* ── Controls pane ── */}
-                    <div className="flex flex-col gap-6">
-                        {/* Shadow controls */}
-                        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-4 bg-white/50 dark:bg-zinc-900/50">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                                    Box Shadow
-                                </h2>
-                                <label className="flex items-center gap-1.5 text-[11px] text-zinc-500 cursor-pointer select-none">
-                                    <input
-                                        type="checkbox"
-                                        checked={shadow.inset}
-                                        onChange={(e) => updateShadow("inset", e.target.checked)}
-                                        className="accent-violet-500 w-3 h-3"
-                                    />
-                                    Inset
-                                </label>
-                            </div>
+            <motion.div
+              key={kind}
+              className="relative z-[1]"
+              initial={{ opacity: 0, scale: reduce ? 1 : 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.22, ease: EASE }}
+            >
+              <PreviewElement kind={kind} surface={surface} style={elementStyle} />
+            </motion.div>
 
-                            <Slider label="Offset X" value={shadow.offsetX} min={-80} max={80} onChange={(v) => updateShadow("offsetX", v)} />
-                            <Slider label="Offset Y" value={shadow.offsetY} min={-80} max={80} onChange={(v) => updateShadow("offsetY", v)} />
-                            <Slider label="Blur" value={shadow.blur} min={0} max={120} onChange={(v) => updateShadow("blur", v)} />
-                            <Slider label="Spread" value={shadow.spread} min={-40} max={60} onChange={(v) => updateShadow("spread", v)} />
-                            <Slider label="Opacity" value={shadow.opacity} min={0} max={1} step={0.01} onChange={(v) => updateShadow("opacity", v)} unit="" />
-                            <ColorPicker label="Color" value={shadow.color} onChange={(v) => updateShadow("color", v)} />
-                        </section>
+            {lightOn && size.w > 0 && (
+              <button
+                type="button"
+                className="absolute z-[2] grid h-9 w-9 cursor-grab touch-none place-items-center rounded-full border border-mk-border-strong bg-mk-surface text-[#f59e0b] shadow-mk-md outline-none transition-[box-shadow] duration-150 focus-visible:shadow-[0_0_0_3px_var(--mk-accent-soft)] active:cursor-grabbing"
+                style={{ left: handle.x - 18, top: handle.y - 18 }}
+                aria-label={`Light source: shadow at ${degrees} degrees, ${Math.round(dist)} pixels. Arrow keys rotate and change distance.`}
+                onPointerDown={onHandleDown}
+                onPointerMove={onHandleMove}
+                onPointerUp={onHandleUp}
+                onPointerCancel={onHandleUp}
+                onKeyDown={onHandleKey}
+              >
+                <SunMedium size={18} strokeWidth={2.25} />
+              </button>
+            )}
+          </div>
 
-                        {/* Border controls */}
-                        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-4 bg-white/50 dark:bg-zinc-900/50">
-                            <h2 className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                                Border
-                            </h2>
 
-                            <div className="flex flex-col gap-1">
-                                <label className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                                    Style
-                                </label>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {(["none", "solid", "dashed", "dotted", "double"] as const).map((s) => (
-                                        <button
-                                            key={s}
-                                            onClick={() => updateBorder("style", s)}
-                                            className={`px-2.5 py-1 text-[11px] rounded-md capitalize transition-colors ${border.style === s
-                                                ? "bg-violet-500 text-white"
-                                                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
-                                                }`}
-                                        >
-                                            {s}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+          <div className="mk-panel">
+            <div className="mk-panel-head flex-wrap">
+              <h2 className="mk-panel-title">Code</h2>
+              <div className="flex items-center gap-2 [&_.mk-tabs-wrap]:mb-0">
+                <SegmentedTabs
+                  label="Output format"
+                  size="sm"
+                  value={tab}
+                  onChange={setTab}
+                  items={[
+                    { value: "css", label: "CSS" },
+                    { value: "tailwind", label: "Tailwind" },
+                  ]}
+                />
+                <button type="button" className="mk-btn mk-btn-ghost mk-btn-sm" onClick={() => copy(code)}>
+                  <span className="mk-swap" data-state={copied ? "b" : "a"}>
+                    <Copy size={14} className="mk-swap-a" />
+                    <Check size={14} className="mk-swap-b" />
+                  </span>
+                  {copied ? "Copied" : "Copy"}
+                </button>
+              </div>
+            </div>
+            <pre className={`mk-code max-h-[220px] ${tab === "tailwind" ? "whitespace-pre-wrap break-all" : ""}`}>{code}</pre>
+          </div>
+        </div>
 
-                            <Slider label="Width" value={border.width} min={0} max={12} onChange={(v) => updateBorder("width", v)} />
-                            <Slider label="Radius" value={border.radius} min={0} max={60} onChange={(v) => updateBorder("radius", v)} />
-                            <ColorPicker label="Color" value={border.color} onChange={(v) => updateBorder("color", v)} />
-                        </section>
+        {/* ── Right: side panel ── */}
+        <aside className="mk-stack-col">
+          <section className="mk-panel">
+            <div className="mk-panel-head">
+              <h2 className="mk-panel-title">Presets</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-2 [--sh-el:var(--mk-surface)] dark:[--sh-el:#26262b]">
+              {PRESETS.map((p) => (
+                <PresetTile key={p.name} preset={p} active={presetName === p.name} onPick={() => applyPreset(p)} />
+              ))}
+            </div>
+          </section>
 
-                        {/* Reset */}
+          <section className="mk-panel">
+            <div className="mk-panel-head">
+              <h2 className="mk-panel-title">Layers</h2>
+              <div className="flex gap-1">
+                <button type="button" className="mk-icon-btn" onClick={addLayer} aria-label="Add layer" title="Add layer">
+                  <Plus size={15} />
+                </button>
+                <button type="button" className="mk-icon-btn disabled:opacity-40" onClick={duplicateLayer} disabled={!selected} aria-label="Duplicate layer" title="Duplicate">
+                  <CopyPlus size={15} />
+                </button>
+                <button type="button" className="mk-icon-btn disabled:opacity-40" onClick={() => moveLayer(-1)} disabled={selectedIndex <= 0} aria-label="Move layer up" title="Move up">
+                  <ArrowUp size={15} />
+                </button>
+                <button type="button" className="mk-icon-btn disabled:opacity-40" onClick={() => moveLayer(1)} disabled={selectedIndex < 0 || selectedIndex >= layers.length - 1} aria-label="Move layer down" title="Move down">
+                  <ArrowDown size={15} />
+                </button>
+                <button type="button" className="mk-icon-btn disabled:opacity-40" onClick={deleteLayer} disabled={!selected} aria-label="Delete layer" title="Delete">
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            </div>
+
+            {layers.length === 0 ? (
+              <p className="m-0 rounded-[12px] bg-mk-surface-2 px-3 py-4 text-center text-[12.5px] text-mk-muted">
+                No layers yet. Add one or pick a preset.
+              </p>
+            ) : (
+              <ul className="m-0 flex list-none flex-col gap-1 p-0" aria-label="Shadow layers">
+                <AnimatePresence initial={false}>
+                  {layers.map((l, i) => {
+                    const active = l.id === selectedId;
+                    return (
+                      <motion.li
+                        key={l.id}
+                        layout={reduce ? false : "position"}
+                        initial={{ opacity: 0, y: reduce ? 0 : -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                        transition={{ duration: 0.2, ease: EASE }}
+                        className={`flex items-center gap-1 rounded-[11px] border pr-1 transition-colors duration-150 ${
+                          active ? "border-mk-border-strong bg-mk-surface-2" : "border-transparent hover:bg-mk-surface-2"
+                        }`}
+                      >
                         <button
-                            onClick={() => {
-                                setShadow({ offsetX: 4, offsetY: 8, blur: 24, spread: 0, color: "#8b5cf6", opacity: 0.35, inset: false });
-                                setBorder({ width: 1, style: "solid", color: "#e4e4e7", radius: 10 });
-                            }}
-                            className="text-[12px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors text-left"
+                          type="button"
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] text-mk-muted transition-colors duration-150 hover:text-mk-text"
+                          onClick={() => editLayers((ls) => ls.map((x) => (x.id === l.id ? { ...x, visible: !x.visible } : x)))}
+                          aria-label={l.visible ? `Hide layer ${i + 1}` : `Show layer ${i + 1}`}
+                          aria-pressed={!l.visible}
                         >
-                            ↺ Reset to defaults
+                          {l.visible ? <Eye size={15} /> : <EyeOff size={15} />}
                         </button>
-                    </div>
+                        <button
+                          type="button"
+                          className={`flex min-w-0 flex-1 items-center gap-2.5 py-2 text-left ${l.visible ? "" : "opacity-50"}`}
+                          onClick={() => setSelectedId(l.id)}
+                          aria-current={active}
+                        >
+                          <span
+                            className="h-4 w-4 shrink-0 rounded-full border border-mk-border-strong"
+                            style={{
+                              background: l.inset ? "transparent" : l.color,
+                              boxShadow: l.inset ? `inset 0 0 0 4px ${l.color}` : undefined,
+                              opacity: 0.35 + l.opacity * 0.65,
+                            }}
+                          />
+                          <span className="text-[13px] font-medium text-mk-text">Layer {i + 1}</span>
+                          <span className="ml-auto truncate font-mono text-[11.5px] text-mk-muted">
+                            {l.inset && "inset "}
+                            {[l.x, l.y, l.blur, l.spread].map((v) => Math.round(v * 10) / 10).join(" ")}
+                          </span>
+                        </button>
+                      </motion.li>
+                    );
+                  })}
+                </AnimatePresence>
+              </ul>
+            )}
+
+            {selected && (
+              <div className="mt-4 flex flex-col gap-3.5 border-t border-mk-border pt-4">
+                <div className="mk-field-row">
+                  <span className="text-[13px] font-medium text-mk-text">Layer {selectedIndex + 1}</span>
+                  <label className="flex cursor-pointer select-none items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="mk-check"
+                      checked={selected.inset}
+                      onChange={(e) => updateSelected("inset", e.target.checked)}
+                    />
+                    Inset
+                  </label>
                 </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
+                  <Range label="X" value={selected.x} min={-MAX_DIST} max={MAX_DIST} onChange={(v) => updateSelected("x", v)} />
+                  <Range label="Y" value={selected.y} min={-MAX_DIST} max={MAX_DIST} onChange={(v) => updateSelected("y", v)} />
+                  <Range label="Blur" value={selected.blur} min={0} max={120} onChange={(v) => updateSelected("blur", v)} />
+                  <Range label="Spread" value={selected.spread} min={-40} max={40} onChange={(v) => updateSelected("spread", v)} />
+                </div>
+                <Range
+                  label="Opacity"
+                  value={selected.opacity}
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  format={(v) => `${Math.round(v * 100)}%`}
+                  onChange={(v) => updateSelected("opacity", v)}
+                />
+                <ColorRow label="Colour" value={selected.color} swatches={SWATCHES} onChange={(v) => updateSelected("color", v)} />
+              </div>
+            )}
+          </section>
 
-                {/* Presets */}
-                <section className="mb-10 animate-[fadeUp_0.7s_cubic-bezier(0.22,1,0.36,1)_0.15s_backwards]">
-                    <h2 className="text-[12px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4">
-                        Presets
-                    </h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {[
-                            {
-                                label: "Soft Glow",
-                                shadow: { offsetX: 0, offsetY: 0, blur: 40, spread: 0, color: "#8b5cf6", opacity: 0.4, inset: false },
-                                border: { width: 1, style: "solid" as const, color: "#ddd6fe", radius: 14 },
-                            },
-                            {
-                                label: "Hard Drop",
-                                shadow: { offsetX: 6, offsetY: 6, blur: 0, spread: 0, color: "#000000", opacity: 0.9, inset: false },
-                                border: { width: 2, style: "solid" as const, color: "#000000", radius: 0 },
-                            },
-                            {
-                                label: "Inner Depth",
-                                shadow: { offsetX: 0, offsetY: 4, blur: 12, spread: -2, color: "#000000", opacity: 0.2, inset: true },
-                                border: { width: 1, style: "solid" as const, color: "#e4e4e7", radius: 10 },
-                            },
-                            {
-                                label: "Neon Blue",
-                                shadow: { offsetX: 0, offsetY: 0, blur: 20, spread: 2, color: "#3b82f6", opacity: 0.7, inset: false },
-                                border: { width: 1, style: "solid" as const, color: "#3b82f6", radius: 8 },
-                            },
-                        ].map((preset) => (
-                            <button
-                                key={preset.label}
-                                onClick={() => {
-                                    setShadow(preset.shadow);
-                                    setBorder(preset.border);
-                                }}
-                                className="group relative flex flex-col items-center gap-3 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 hover:border-violet-300 dark:hover:border-violet-700 transition-all duration-200 hover:bg-violet-50/50 dark:hover:bg-violet-950/30"
-                            >
-                                {/* mini preview */}
-                                <div
-                                    className="w-10 h-10 bg-zinc-900 dark:bg-zinc-100 rounded-md transition-all duration-300"
-                                    style={{
-                                        boxShadow: buildBoxShadow(preset.shadow),
-                                        border: buildBorder(preset.border),
-                                        borderRadius: preset.border.radius,
-                                    }}
-                                />
-                                <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
-                                    {preset.label}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                </section>
+          <section className="mk-panel">
+            <div className="mk-panel-head">
+              <h2 className="mk-panel-title flex items-center gap-2">
+                <Wand2 size={15} className="text-mk-muted" />
+                Smooth shadow
+              </h2>
+            </div>
+            <p className="-mt-2 mb-4 text-[12.5px] leading-relaxed text-mk-muted">
+              Generates eased layers whose offsets double each step. Moving a slider replaces the layer list; direction follows the light source.
+            </p>
+            <div className="flex flex-col gap-3.5">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
+                <Range label="Layers" value={smooth.count} min={2} max={8} unit="" onChange={(v) => updateSmooth("count", v)} />
+                <Range label="Distance" value={smooth.distance} min={2} max={MAX_DIST} onChange={(v) => updateSmooth("distance", v)} />
+                <Range
+                  label="Softness"
+                  value={smooth.softness}
+                  min={0.5}
+                  max={3}
+                  step={0.1}
+                  format={(v) => `${v.toFixed(1)}×`}
+                  onChange={(v) => updateSmooth("softness", v)}
+                />
+                <Range
+                  label="Darkness"
+                  value={smooth.darkness}
+                  min={0.04}
+                  max={0.8}
+                  step={0.01}
+                  format={(v) => `${Math.round(v * 100)}%`}
+                  onChange={(v) => updateSmooth("darkness", v)}
+                />
+              </div>
+              <ColorRow label="Colour" value={smooth.color} swatches={SWATCHES.slice(0, 6)} onChange={(v) => updateSmooth("color", v)} />
+            </div>
+          </section>
 
-            </main>
-        </motion.div>
-    );
+          <section className="mk-panel">
+            <div className="mk-panel-head">
+              <h2 className="mk-panel-title">Border &amp; radius</h2>
+            </div>
+            <div className="flex flex-col gap-3.5">
+              <div className="mk-field gap-2">
+                <span className="mk-field-row">Style</span>
+                <div className="mk-chips">
+                  {BORDER_STYLES.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      className="mk-chip capitalize"
+                      data-active={border.style === s}
+                      onClick={() => editBorder("style", s)}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className={border.style === "none" ? "opacity-40" : undefined} inert={border.style === "none"}>
+                <div className="flex flex-col gap-3.5">
+                  <Range label="Width" value={border.width} min={1} max={12} onChange={(v) => editBorder("width", v)} />
+                  <ColorRow label="Colour" value={border.color} swatches={BORDER_SWATCHES} onChange={(v) => editBorder("color", v)} />
+                </div>
+              </div>
+              <Range label="Radius" value={border.radius} min={0} max={64} onChange={(v) => editBorder("radius", v)} />
+            </div>
+          </section>
+          <section className="mk-panel">
+            <div className="mk-panel-head">
+              <h2 className="mk-panel-title">Preview colours</h2>
+            </div>
+            <div className="flex flex-col gap-3.5">
+              <ColorRow label="Background" value={background} swatches={BG_SWATCHES} allowAuto onChange={setBackground} />
+              <ColorRow label="Element" value={surface} swatches={SURFACE_SWATCHES} allowAuto onChange={setSurface} />
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      <MorePlaygrounds current="/shadow" />
+    </main>
+  );
 }
