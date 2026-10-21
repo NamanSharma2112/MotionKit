@@ -1,0 +1,279 @@
+/* Isometric maker — page-specific bits on top of the shared mk-* primitives. */
+
+.iso-stage {
+  --iso-ground-top: #ececef;
+  --iso-ground-left: #dcdce1;
+  --iso-ground-right: #c9c9cf;
+  --iso-grid: rgba(0, 0, 0, 0.13);
+  --iso-cell-hover: rgba(31, 107, 255, 0.1);
+  height: clamp(440px, 68vh, 700px);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dark .iso-stage {
+  --iso-ground-top: #26262b;
+  --iso-ground-left: #1e1e22;
+  --iso-ground-right: #18181b;
+  --iso-grid: rgba(255, 255, 255, 0.1);
+  --iso-cell-hover: rgba(59, 125, 255, 0.16);
+}
+
+.iso-stage[data-pan="true"] {
+  touch-action: none;
+}
+
+@media (max-width: 640px) {
+  .iso-stage {
+    height: 380px;
+  }
+}
+
+.iso-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  shape-rendering: geometricPrecision;
+}
+
+.iso-cell {
+  fill: transparent;
+  stroke: var(--iso-grid);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.iso-stage[data-grid="false"] .iso-cell {
+  stroke: transparent;
+}
+
+.iso-cell[data-hover="true"] {
+  fill: var(--iso-cell-hover);
+}
+
+.iso-block {
+  transition: opacity 120ms ease;
+}
+
+/* Erase preview */
+.iso-block[data-state="erase"] {
+  opacity: 0.32;
+}
+
+/* New block: short drop into place. Pointer placements only. */
+.iso-drop {
+  animation: iso-drop 180ms var(--ease-out) both;
+}
+
+@keyframes iso-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* Erased block: quick fade, nothing else. */
+.iso-fade {
+  pointer-events: none;
+  animation: iso-fade 120ms ease-out forwards;
+}
+
+@keyframes iso-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+.iso-ghost {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.iso-ghost-outline {
+  fill: none;
+  stroke: var(--mk-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iso-drop,
+  .iso-fade {
+    animation: none;
+  }
+  .iso-block {
+    transition: none;
+  }
+}
+
+/* Canvas corner badges */
+.iso-badges {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.iso-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+/* Tooltips with a shortcut hint, for toolbar buttons. Rendered only while
+   shown so an off-screen tooltip can never cause horizontal scroll. */
+.iso-tip {
+  position: relative;
+}
+
+.iso-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 30;
+  display: none;
+  padding: 5px 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: pre;
+  color: var(--mk-bg);
+  background: var(--mk-text);
+  box-shadow: var(--mk-shadow-md);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.iso-tip[data-tip-align="end"]::after {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .iso-tip:hover::after {
+    display: block;
+    animation: iso-tip-in 120ms ease-out 400ms both;
+  }
+}
+
+.iso-tip:focus-visible::after {
+  display: block;
+}
+
+@keyframes iso-tip-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iso-tip:hover::after {
+    animation-duration: 1ms;
+  }
+}
+
+/* Shape picker tiles */
+.mk-option.iso-shape {
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px 8px;
+}
+
+.iso-shape svg {
+  display: block;
+  height: 34px;
+  width: auto;
+}
+
+/* Example tiles */
+.iso-thumb {
+  display: block;
+  height: 84px;
+  border-radius: 10px;
+  background-color: var(--mk-surface-2);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-origin: content-box;
+  padding: 8px;
+}
+
+/* Colour picker swatch that wraps a native colour input */
+.iso-custom {
+  position: relative;
+  overflow: hidden;
+  background: conic-gradient(from 90deg, #ff5c5c, #ffd23f, #4ade80, #38bdf8, #a78bfa, #f472b6, #ff5c5c);
+}
+
+.iso-custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.iso-custom:has(input:focus-visible) {
+  outline: 2px solid var(--mk-accent);
+  outline-offset: 2px;
+}
+
+.iso-kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 5px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--mk-text);
+  background: var(--mk-surface);
+  border: 1px solid var(--mk-border-strong);
+}
+
+.iso-textarea {
+  height: 96px;
+  padding: 8px 10px;
+  resize: vertical;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.iso-danger[data-confirm="true"] {
+  color: #fff;
+  background: #e5484d;
+}
+
+@media (min-width: 1025px) {
+  .iso-sticky {
+    position: sticky;
+    top: 76px;
+  }
+}
+
+.iso-hint {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .iso-hint {
+    display: flex;
+  }
+}
+
+.dark .iso-swatches .mk-swatch {
+  border-color: rgba(255, 255, 255, 0.16);
+}
