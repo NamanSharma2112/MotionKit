@@ -1,637 +1,763 @@
 "use client";
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  Check,
+  Copy,
+  Download,
+  Maximize2,
+  Minimize2,
+  Pause,
+  PenLine,
+  Play,
+  RotateCcw,
+  SkipBack,
+  Sparkles,
+  Undo2,
+} from "lucide-react";
+import PageHeader from "../compoents/ui/PageHeader";
+import SegmentedTabs from "../compoents/ui/SegmentedTabs";
+import MorePlaygrounds from "../compoents/ui/MorePlaygrounds";
+import CodeEditor, { type CodeEditorHandle } from "./CodeEditor";
+import PresetTile, { controlsFor } from "./PresetTile";
+import {
+  bakeDefaults,
+  hasWebGL,
+  parseControls,
+  resolveValues,
+  ShaderRenderer,
+  type CompileResult,
+  type Control,
+  type RendererStats,
+  type UniformValue,
+  type UniformValues,
+} from "./engine";
+import { componentName, reactComponent } from "./exporters";
+import { DEFAULT_PRESET_ID, presets, templates } from "./presets";
+import "./shaders.css";
 
-/* ─── Shader Presets ─── */
-interface ShaderPreset {
-  name: string;
-  description: string;
-  fragment: string;
-  uniforms?: Record<string, number>;
+type Mode = "presets" | "custom";
+type CodeTab = "glsl" | "react";
+type ExportSize = "view" | "1080p" | "4k";
+
+const DRAFT_KEY = "mk-shader-draft";
+const SIZES: Record<ExportSize, { label: string; w?: number; h?: number }> = {
+  view: { label: "Canvas" },
+  "1080p": { label: "1080p", w: 1920, h: 1080 },
+  "4k": { label: "4K", w: 3840, h: 2160 },
+};
+
+const noopSubscribe = () => () => {};
+
+/* prefers-reduced-motion with a server snapshot, so hydration always matches
+   and the real value applies right after. */
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (cb: () => void) => {
+  const mq = window.matchMedia(RM_QUERY);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const useReducedMotion = () =>
+  useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(RM_QUERY).matches,
+    () => false,
+  );
+
+function CopyIcon({ done }: { done: boolean }) {
+  return (
+    <span className="mk-swap" data-state={done ? "b" : "a"}>
+      <Copy size={14} className="mk-swap-a" />
+      <Check size={14} className="mk-swap-b" />
+    </span>
+  );
 }
 
-const VERT = `attribute vec2 a_position;
-void main(){ gl_Position=vec4(a_position,0.0,1.0); }`;
-
-const presets: ShaderPreset[] = [
-  {
-    name: "Aurora",
-    description: "Flowing northern lights",
-    fragment: `precision mediump float;
-uniform float u_time;
-uniform vec2 u_resolution;
-void main(){
-  vec2 uv=(gl_FragCoord.xy-u_resolution*.5)/u_resolution.y;
-  float t=u_time*.4;
-  vec3 col=vec3(0);
-  for(float i=1.;i<6.;i++){
-    uv.y+=sin(uv.x*i*1.5+t*i*.3)*.15/i;
-    float d=abs(uv.y)*(40.+i*10.);
-    col+=vec3(.2/d,.4/d,.6/d)/i;
-  }
-  col=pow(col,vec3(.8));
-  gl_FragColor=vec4(col,1);
-}`,
-  },
-  {
-    name: "Plasma",
-    description: "Classic plasma waves",
-    fragment: `precision mediump float;
-uniform float u_time;
-uniform vec2 u_resolution;
-void main(){
-  vec2 uv=gl_FragCoord.xy/u_resolution;
-  float t=u_time*.5;
-  float v=sin(uv.x*10.+t);
-  v+=sin((uv.y*10.+t)/2.);
-  v+=sin((uv.x*10.+uv.y*10.+t)/2.);
-  float cx=uv.x+.5*sin(t/5.);
-  float cy=uv.y+.5*cos(t/3.);
-  v+=sin(sqrt(100.*(cx*cx+cy*cy)+1.)+t);
-  v=v/2.;
-  vec3 col=vec3(sin(v*3.14159),sin(v*3.14159+2.094),sin(v*3.14159+4.189));
-  col=col*.5+.5;
-  gl_FragColor=vec4(col,1);
-}`,
-  },
-  {
-    name: "Nebula",
-    description: "Deep space nebula clouds",
-    fragment: `precision mediump float;
-uniform float u_time;
-uniform vec2 u_resolution;
-float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float noise(vec2 p){
-  vec2 i=floor(p),f=fract(p);
-  f=f*f*(3.-2.*f);
-  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
-}
-float fbm(vec2 p){
-  float v=0.,a=.5;
-  for(int i=0;i<5;i++){v+=a*noise(p);p*=2.;a*=.5;}
-  return v;
-}
-void main(){
-  vec2 uv=gl_FragCoord.xy/u_resolution;
-  float t=u_time*.15;
-  float n=fbm(uv*3.+t);
-  float n2=fbm(uv*5.-t*.7+n);
-  vec3 c1=vec3(.1,.0,.2);
-  vec3 c2=vec3(.4,.1,.6);
-  vec3 c3=vec3(.1,.3,.8);
-  vec3 col=mix(c1,c2,n);
-  col=mix(col,c3,n2*.6);
-  col+=vec3(.8,.4,.2)*pow(n2,3.)*.5;
-  gl_FragColor=vec4(col,1);
-}`,
-  },
-  {
-    name: "Warp Grid",
-    description: "Warped perspective grid",
-    fragment: `precision mediump float;
-uniform float u_time;
-uniform vec2 u_resolution;
-void main(){
-  vec2 uv=(gl_FragCoord.xy-.5*u_resolution)/u_resolution.y;
-  float t=u_time*.3;
-  vec2 p=uv*3.;
-  p.y+=t;
-  p+=.5*sin(p.yx*1.5+t);
-  vec2 g=fract(p)-.5;
-  float d=length(g);
-  float m=smoothstep(.35,.3,d);
-  vec3 col=vec3(m)*.3;
-  col+=vec3(.2,.5,.9)*smoothstep(.05,.0,abs(d-.3))*.8;
-  col+=vec3(.9,.3,.5)*smoothstep(.05,.0,abs(d-.15))*.4;
-  gl_FragColor=vec4(col,1);
-}`,
-  },
-  {
-    name: "Liquid Metal",
-    description: "Metallic fluid simulation",
-    fragment: `precision mediump float;
-uniform float u_time;
-uniform vec2 u_resolution;
-void main(){
-  vec2 uv=(gl_FragCoord.xy-.5*u_resolution)/u_resolution.y;
-  float t=u_time*.4;
-  float d=length(uv);
-  float a=atan(uv.y,uv.x);
-  float f=sin(a*3.+t)*sin(a*5.-t*.7)*.5+.5;
-  f+=sin(d*10.-t*2.)*.2;
-  f=pow(f,1.5);
-  vec3 col=mix(vec3(.05,.05,.1),vec3(.6,.7,.8),f);
-  col+=vec3(.9,.9,1.)*pow(max(0.,1.-d*2.),3.)*.3;
-  col+=vec3(.3,.5,.7)*smoothstep(.5,.0,d)*.2;
-  gl_FragColor=vec4(col,1);
-}`,
-  },
-  {
-    name: "Voronoi",
-    description: "Animated cell patterns",
-    fragment: `precision mediump float;
-uniform float u_time;
-uniform vec2 u_resolution;
-vec2 hash2(vec2 p){return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);}
-void main(){
-  vec2 uv=gl_FragCoord.xy/u_resolution*4.;
-  float t=u_time*.3;
-  vec2 ip=floor(uv),fp=fract(uv);
-  float md=8.;
-  vec2 mr;
-  for(int j=-1;j<=1;j++)
-  for(int i=-1;i<=1;i++){
-    vec2 nb=vec2(float(i),float(j));
-    vec2 o=hash2(ip+nb);
-    o=.5+.5*sin(t+6.2831*o);
-    vec2 r=nb+o-fp;
-    float d=dot(r,r);
-    if(d<md){md=d;mr=r;}
-  }
-  md=sqrt(md);
-  vec3 col=vec3(.05,.02,.1);
-  col+=vec3(.3,.1,.5)*smoothstep(.0,.4,md);
-  col+=vec3(.1,.5,.9)*(1.-md)*.3;
-  col+=vec3(.9,.3,.5)*pow(1.-md,4.)*.5;
-  gl_FragColor=vec4(col,1);
-}`,
-  },
-  {
-    name: "Ocean Waves",
-    description: "Stylized water surface",
-    fragment: `precision mediump float;
-uniform float u_time;
-uniform vec2 u_resolution;
-void main(){
-  vec2 uv=(gl_FragCoord.xy-.5*u_resolution)/u_resolution.y;
-  float t=u_time*.3;
-  float w=0.;
-  for(float i=1.;i<8.;i++){
-    w+=sin(uv.x*i*2.+t*i*.5+uv.y*i)*.5/i;
-    w+=cos(uv.y*i*1.5-t*i*.3+uv.x*i*.7)*.5/i;
-  }
-  vec3 deep=vec3(.02,.05,.15);
-  vec3 mid=vec3(.05,.2,.4);
-  vec3 top=vec3(.3,.6,.8);
-  float f=w*.5+.5;
-  vec3 col=mix(deep,mid,smoothstep(.3,.5,f));
-  col=mix(col,top,smoothstep(.6,.8,f));
-  col+=vec3(1)*pow(max(f-.75,0.)*4.,3.)*.2;
-  gl_FragColor=vec4(col,1);
-}`,
-  },
-  {
-    name: "Fire",
-    description: "Animated fire effect",
-    fragment: `precision mediump float;
-uniform float u_time;
-uniform vec2 u_resolution;
-float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float noise(vec2 p){
-  vec2 i=floor(p),f=fract(p);
-  f=f*f*(3.-2.*f);
-  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
-}
-void main(){
-  vec2 uv=gl_FragCoord.xy/u_resolution;
-  uv.y=1.-uv.y;
-  float t=u_time*1.5;
-  float n=0.;
-  n+=noise(vec2(uv.x*4.,uv.y*3.-t))*.5;
-  n+=noise(vec2(uv.x*8.,uv.y*6.-t*1.2))*.25;
-  n+=noise(vec2(uv.x*16.,uv.y*12.-t*1.5))*.125;
-  float f=n*(1.-uv.y);
-  f=pow(f,1.2)*2.;
-  vec3 col=mix(vec3(0),vec3(.8,.2,0),smoothstep(.1,.4,f));
-  col=mix(col,vec3(1,.6,0),smoothstep(.4,.7,f));
-  col=mix(col,vec3(1,1,.5),smoothstep(.7,.95,f));
-  gl_FragColor=vec4(col,1);
-}`,
-  },
-  {
-    name: "Matrix Rain",
-    description: "Digital rain effect",
-    fragment: `precision mediump float;
-uniform float u_time;
-uniform vec2 u_resolution;
-float hash(float n){return fract(sin(n)*43758.5453);}
-void main(){
-  vec2 uv=gl_FragCoord.xy/u_resolution;
-  float cols=30.;
-  float col_id=floor(uv.x*cols);
-  float speed=hash(col_id*13.7)*.5+.5;
-  float offset=hash(col_id*7.3);
-  float y=fract(-u_time*speed*.3+offset);
-  float trail=smoothstep(0.,.4,1.-abs(uv.y-y)*3.);
-  trail*=smoothstep(0.,.02,uv.y);
-  float bright=trail*(.5+.5*hash(floor(uv.y*40.)+col_id+floor(u_time*5.)));
-  vec3 c=vec3(.1,.9,.3)*bright;
-  c+=vec3(.3,1.,.5)*pow(trail,4.)*.5;
-  gl_FragColor=vec4(c,1);
-}`,
-  },
-];
-
-/* ─── WebGL Helpers ─── */
-function compileShader(gl: WebGLRenderingContext, type: number, src: string) {
-  const s = gl.createShader(type);
-  if (!s) return null;
-  gl.shaderSource(s, src);
-  gl.compileShader(s);
-  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-    const log = gl.getShaderInfoLog(s);
-    gl.deleteShader(s);
-    throw new Error(log || "Shader compile error");
-  }
-  return s;
-}
-
-function createProgram(gl: WebGLRenderingContext, vert: string, frag: string) {
-  const vs = compileShader(gl, gl.VERTEX_SHADER, vert);
-  const fs = compileShader(gl, gl.FRAGMENT_SHADER, frag);
-  if (!vs || !fs) throw new Error("Failed to compile shaders");
-  const prog = gl.createProgram()!;
-  gl.attachShader(prog, vs);
-  gl.attachShader(prog, fs);
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    throw new Error(gl.getProgramInfoLog(prog) || "Link error");
-  }
-  return prog;
-}
-
-/* ─── ShaderCanvas Component ─── */
-function ShaderCanvas({
-  fragment,
-  className = "",
-  style,
+function RangeControl({
+  control,
+  value,
+  onChange,
 }: {
-  fragment: string;
-  className?: string;
-  style?: React.CSSProperties;
+  control: Extract<Control, { kind: "range" }>;
+  value: number;
+  onChange: (v: number) => void;
 }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef = useRef<number>(0);
-  const progRef = useRef<WebGLProgram | null>(null);
-  const errRef = useRef(false);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const gl = canvas.getContext("webgl", { antialias: false, alpha: false });
-    if (!gl) return;
-
-    errRef.current = false;
-
-    try {
-      const prog = createProgram(gl, VERT, fragment);
-      progRef.current = prog;
-    } catch {
-      errRef.current = true;
-      return;
-    }
-
-    const prog = progRef.current!;
-    gl.useProgram(prog);
-
-    // Full-screen quad
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
-      gl.STATIC_DRAW
-    );
-    const aPos = gl.getAttribLocation(prog, "a_position");
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-    const uTime = gl.getUniformLocation(prog, "u_time");
-    const uRes = gl.getUniformLocation(prog, "u_resolution");
-    const uMouse = gl.getUniformLocation(prog, "u_mouse");
-
-    const start = performance.now();
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio, 2);
-      const parent = canvas.parentElement;
-      const w = parent ? parent.clientWidth : canvas.clientWidth;
-      const h = parent ? parent.clientHeight : canvas.clientHeight;
-      if (w === 0 || h === 0) return;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      gl.viewport(0, 0, canvas.width, canvas.height);
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas.parentElement || canvas);
-
-    const loop = () => {
-      if (errRef.current) return;
-      const t = (performance.now() - start) / 1000;
-      gl.uniform1f(uTime, t);
-      gl.uniform2f(uRes, canvas.width, canvas.height);
-      if (uMouse) gl.uniform2f(uMouse, 0, 0);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      rafRef.current = requestAnimationFrame(loop);
-    };
-    loop();
-
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      ro.disconnect();
-      gl.deleteProgram(prog);
-    };
-  }, [fragment]);
-
+  const pct = ((value - control.min) / (control.max - control.min)) * 100;
+  const digits = control.step >= 1 ? 0 : control.step >= 0.1 ? 1 : 2;
+  const id = `sh-${control.name}`;
   return (
-    <canvas
-      ref={canvasRef}
-      className={className}
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "block",
-        transition: "none",
-        contain: "strict",
-        ...style,
-      }}
-    />
-  );
-}
-
-/* ─── Small UI Components ─── */
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-        active
-          ? "bg-neutral-900 text-white dark:bg-white dark:text-black shadow-lg"
-          : "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }}
-      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-all"
-    >
-      {copied ? "✓ Copied" : "Copy GLSL"}
-    </button>
-  );
-}
-
-/* ─── Custom Editor ─── */
-function ShaderEditor({
-  onFragmentChange,
-}: {
-  onFragmentChange: (frag: string) => void;
-}) {
-  const [code, setCode] = useState(`precision mediump float;
-uniform float u_time;
-uniform vec2 u_resolution;
-
-void main(){
-  vec2 uv = gl_FragCoord.xy / u_resolution;
-  float t = u_time * 0.5;
-  
-  vec3 col = vec3(0.0);
-  col.r = sin(uv.x * 6.28 + t) * 0.5 + 0.5;
-  col.g = sin(uv.y * 6.28 + t * 1.3) * 0.5 + 0.5;
-  col.b = sin((uv.x + uv.y) * 3.14 + t * 0.7) * 0.5 + 0.5;
-  
-  gl_FragColor = vec4(col, 1.0);
-}`);
-  const [error, setError] = useState("");
-  const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  const tryCompile = useCallback(
-    (src: string) => {
-      const canvas = document.createElement("canvas");
-      const gl = canvas.getContext("webgl");
-      if (!gl) return;
-      try {
-        const prog = createProgram(gl, VERT, src);
-        gl.deleteProgram(prog);
-        setError("");
-        onFragmentChange(src);
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Compile error");
-      }
-      canvas.remove();
-    },
-    [onFragmentChange]
-  );
-
-  const handleChange = (val: string) => {
-    setCode(val);
-    clearTimeout(debounce.current);
-    debounce.current = setTimeout(() => tryCompile(val), 600);
-  };
-
-  useEffect(() => {
-    tryCompile(code);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 mb-1">
-        <span className={`w-2 h-2 rounded-full ${error ? "bg-red-400" : "bg-green-400"} animate-pulse`} />
-        <span className="text-xs font-medium dark:text-white">Fragment Shader</span>
+    <div className="mk-field">
+      <div className="mk-field-row">
+        <label htmlFor={id}>{control.label}</label>
+        <span className="mk-value">{value.toFixed(digits)}</span>
       </div>
-      <textarea
-        value={code}
-        onChange={(e) => handleChange(e.target.value)}
-        spellCheck={false}
-        className="w-full h-64 p-4 rounded-xl bg-neutral-100 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 font-mono text-xs text-neutral-700 dark:text-neutral-300 resize-y outline-none focus:border-indigo-500 transition-colors"
+      <input
+        id={id}
+        type="range"
+        className="mk-range"
+        min={control.min}
+        max={control.max}
+        step={control.step}
+        value={value}
+        style={{ "--p": `${pct}%` } as React.CSSProperties}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
       />
-      {error && (
-        <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-xs text-red-600 dark:text-red-400 font-mono whitespace-pre-wrap">
-          {error}
-        </div>
-      )}
-      <p className="text-[11px] text-neutral-400 dark:text-neutral-500 leading-relaxed">
-        Available uniforms: <code className="text-indigo-400">u_time</code>,{" "}
-        <code className="text-indigo-400">u_resolution</code>,{" "}
-        <code className="text-indigo-400">u_mouse</code>
-      </p>
     </div>
   );
 }
 
-/* ─── Main Page ─── */
+function ColorControl({
+  control,
+  value,
+  onChange,
+}: {
+  control: Extract<Control, { kind: "color" }>;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="sh-color">
+      <span>{control.label}</span>
+      <label className="sh-color-input">
+        <span className="sh-color-chip" style={{ background: value }} />
+        <span className="mk-value">{value}</span>
+        <input
+          type="color"
+          value={value}
+          aria-label={control.label}
+          onChange={(e) => onChange(e.target.value.toLowerCase())}
+        />
+      </label>
+    </div>
+  );
+}
+
 export default function ShadersPage() {
-  const [editorMode, setEditorMode] = useState<"presets" | "custom">("presets");
-  const [activeFragment, setActiveFragment] = useState(presets[0].fragment);
-  const [selectedName, setSelectedName] = useState(presets[0].name);
+  const reduceMotion = useReducedMotion();
+  const supported = useSyncExternalStore(noopSubscribe, hasWebGL, () => true);
 
-  const selectPreset = (p: ShaderPreset) => {
-    setActiveFragment(p.fragment);
-    setSelectedName(p.name);
-  };
+  const [mode, setMode] = useState<Mode>("presets");
+  const [presetId, setPresetId] = useState(DEFAULT_PRESET_ID);
+  const [presetValues, setPresetValues] = useState<Record<string, UniformValues>>({});
+  const [customCode, setCustomCode] = useState(templates[0].source);
+  const [customGood, setCustomGood] = useState<string | null>(null);
+  const [customValues, setCustomValues] = useState<UniformValues>({});
+  const [status, setStatus] = useState<CompileResult | null>(null);
+  const [undo, setUndo] = useState<string | null>(null);
+  const [docId, setDocId] = useState(0);
+  const [playOverride, setPlayOverride] = useState<boolean | null>(null);
+  const [speed, setSpeed] = useState(1);
+  const [codeTab, setCodeTab] = useState<CodeTab>("glsl");
+  const [exportSize, setExportSize] = useState<ExportSize>("view");
+  const [exporting, setExporting] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
-  const handleCustomFragment = useCallback((frag: string) => {
-    setActiveFragment(frag);
-    setSelectedName("Custom");
+  const playing = playOverride ?? !reduceMotion;
+
+  const stageRef = useRef<HTMLDivElement>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLSpanElement>(null);
+  const rendererRef = useRef<ShaderRenderer | null>(null);
+  const editorRef = useRef<CodeEditorHandle>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const draftLoaded = useRef(false);
+  const playingRef = useRef(playing);
+
+  const preset = presets.find((p) => p.id === presetId) ?? presets[0];
+  const showingCustom = mode === "custom" && customGood !== null;
+  const source = showingCustom ? customGood : preset.source;
+  const customControls = useMemo(() => (customGood ? parseControls(customGood) : []), [customGood]);
+  const controls = showingCustom ? customControls : controlsFor(preset);
+  const overrides = showingCustom ? customValues : presetValues[presetId];
+  const values = useMemo(() => resolveValues(controls, overrides), [controls, overrides]);
+  const displayName = showingCustom ? "Custom shader" : preset.name;
+
+  /* ─── Renderer lifecycle ─── */
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    // A fresh canvas per mount: a context lost on unmount can't be reused.
+    const canvas = document.createElement("canvas");
+    canvas.className = "sh-gl";
+    canvas.setAttribute("aria-hidden", "true");
+    host.appendChild(canvas);
+    let r: ShaderRenderer;
+    try {
+      r = new ShaderRenderer(canvas);
+    } catch {
+      canvas.remove();
+      return;
+    }
+    r.onStats = ({ fps, width, height }: RendererStats) => {
+      const el = statsRef.current;
+      if (!el) return;
+      const size = `${width}×${height}`;
+      el.textContent = fps > 0 ? `${Math.round(fps)} fps · ${size}` : `${playingRef.current ? "Idle" : "Paused"} · ${size}`;
+    };
+    rendererRef.current = r;
+    return () => {
+      rendererRef.current = null;
+      r.destroy();
+      canvas.remove();
+    };
   }, []);
 
-  return (
-    <div className="min-h-screen p-6 sm:p-12 lg:p-20 flex flex-col items-center transition-colors">
-      {/* Header */}
-      <header className="max-w-4xl w-full text-center mb-12">
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-4xl sm:text-5xl font-bold mb-4 dark:text-white"
-        >
-          Shader Playground
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="text-neutral-500 dark:text-neutral-400 text-lg"
-        >
-          GPU-powered background effects — pick a preset or write your own GLSL.
-        </motion.p>
-      </header>
+  useEffect(() => {
+    rendererRef.current?.setValues(values);
+  }, [values]);
 
-      {/* Tabs */}
-      <div className="flex flex-wrap justify-center gap-3 mb-10">
-        <div className="flex gap-1 p-1 rounded-2xl bg-neutral-100 dark:bg-neutral-900">
-          <TabButton
-            active={editorMode === "presets"}
-            onClick={() => setEditorMode("presets")}
-          >
-            Presets
-          </TabButton>
-          <TabButton
-            active={editorMode === "custom"}
-            onClick={() => setEditorMode("custom")}
-          >
-            Custom GLSL
-          </TabButton>
-        </div>
+  useEffect(() => {
+    const r = rendererRef.current;
+    if (r && r.currentSource !== source) r.compile(source);
+  }, [source]);
+
+  useEffect(() => {
+    playingRef.current = playing;
+    rendererRef.current?.setPlaying(playing);
+  }, [playing]);
+
+  useEffect(() => {
+    rendererRef.current?.setSpeed(speed);
+  }, [speed]);
+
+  useEffect(
+    () => () => {
+      clearTimeout(debounceRef.current);
+      clearTimeout(copyTimer.current);
+    },
+    [],
+  );
+
+  /* ─── Fullscreen ─── */
+
+  useEffect(() => {
+    const onChange = () => setFullscreen(!!document.fullscreenElement && document.fullscreenElement === stageRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setExpanded(false);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [expanded]);
+
+  const toggleFullscreen = () => {
+    const el = stageRef.current;
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+      return;
+    }
+    if (expanded) {
+      setExpanded(false);
+      return;
+    }
+    if (el && document.fullscreenEnabled && el.requestFullscreen) {
+      el.requestFullscreen().catch(() => setExpanded(true));
+    } else {
+      setExpanded(true);
+    }
+  };
+
+  /* ─── Custom GLSL ─── */
+
+  const compileCustom = useCallback((code: string) => {
+    const r = rendererRef.current;
+    if (!r) return;
+    const res = r.compile(code);
+    setStatus(res);
+    if (res.ok) setCustomGood(code);
+    try {
+      localStorage.setItem(DRAFT_KEY, code);
+    } catch {}
+  }, []);
+
+  const onCodeChange = (code: string) => {
+    setCustomCode(code);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => compileCustom(code), 350);
+  };
+
+  const compileNow = () => {
+    clearTimeout(debounceRef.current);
+    compileCustom(customCode);
+  };
+
+  const switchMode = (m: Mode) => {
+    setMode(m);
+    if (m !== "custom") return;
+    setCodeTab("glsl");
+    let code = customCode;
+    if (!draftLoaded.current) {
+      draftLoaded.current = true;
+      try {
+        const draft = localStorage.getItem(DRAFT_KEY);
+        if (draft) {
+          code = draft;
+          setCustomCode(draft);
+        }
+      } catch {}
+    }
+    compileCustom(code);
+  };
+
+  const replaceCustom = (code: string) => {
+    if (customCode !== code) setUndo(customCode);
+    draftLoaded.current = true;
+    clearTimeout(debounceRef.current);
+    setCustomCode(code);
+    setCustomValues({});
+    setDocId((n) => n + 1);
+    setMode("custom");
+    setCodeTab("glsl");
+    compileCustom(code);
+  };
+
+  const editPresetCopy = () => replaceCustom(bakeDefaults(preset.source, controls, values));
+
+  const undoReplace = () => {
+    if (undo === null) return;
+    const code = undo;
+    setUndo(null);
+    setCustomCode(code);
+    setDocId((n) => n + 1);
+    compileCustom(code);
+  };
+
+  /* ─── Controls ─── */
+
+  const setValue = (name: string, v: UniformValue) => {
+    if (showingCustom) setCustomValues((prev) => ({ ...prev, [name]: v }));
+    else setPresetValues((prev) => ({ ...prev, [presetId]: { ...prev[presetId], [name]: v } }));
+  };
+
+  const resetControls = () => {
+    if (showingCustom) setCustomValues({});
+    else
+      setPresetValues((prev) => {
+        const next = { ...prev };
+        delete next[presetId];
+        return next;
+      });
+    setSpeed(1);
+  };
+
+  /* ─── Export ─── */
+
+  const glslOut = useMemo(() => bakeDefaults(source, controls, values), [source, controls, values]);
+  const reactOut = useMemo(
+    () =>
+      codeTab === "react" || copied === "react"
+        ? reactComponent({ name: showingCustom ? "Custom" : preset.name, source: glslOut, controls, values, speed })
+        : "",
+    [codeTab, copied, showingCustom, preset.name, glslOut, controls, values, speed],
+  );
+
+  const copy = (kind: string, text: string) => {
+    navigator.clipboard?.writeText(text).then(
+      () => {
+        setCopied(kind);
+        clearTimeout(copyTimer.current);
+        copyTimer.current = setTimeout(() => setCopied(null), 1600);
+      },
+      () => {},
+    );
+  };
+
+  const copyGlsl = () => copy("glsl", mode === "custom" ? customCode : glslOut);
+  const copyReact = () =>
+    copy(
+      "react",
+      reactComponent({ name: showingCustom ? "Custom" : preset.name, source: glslOut, controls, values, speed }),
+    );
+
+  const downloadPng = async (size: ExportSize = exportSize) => {
+    const r = rendererRef.current;
+    if (!r || exporting) return;
+    setExporting(true);
+    const { w, h } = SIZES[size];
+    try {
+      const blob = await r.capture(w, h);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const slug = componentName(displayName).replace(/Shader$/, "").replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+      a.href = url;
+      a.download = `${slug || "shader"}${w ? `-${w}x${h}` : ""}.png`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  /* ─── Render ─── */
+
+  const errors = useMemo(() => (status && !status.ok ? status.errors : []), [status]);
+  const errorLines = useMemo(
+    () => errors.map((e) => e.line).filter((l): l is number => l !== null),
+    [errors],
+  );
+  const isFull = fullscreen || expanded;
+  const animateThumbs = !reduceMotion;
+
+  const playbackControls = (
+    <>
+      <div className="flex items-center gap-2">
+        <button type="button" className="mk-btn mk-btn-ghost mk-btn-sm" onClick={() => setPlayOverride(!playing)}>
+          {playing ? <Pause size={14} /> : <Play size={14} />}
+          {playing ? "Pause" : "Play"}
+        </button>
+        <button type="button" className="mk-btn mk-btn-ghost mk-btn-sm" onClick={() => rendererRef.current?.restart()}>
+          <SkipBack size={14} />
+          Restart
+        </button>
       </div>
+      <div className="mt-4">
+        <RangeControl
+          control={{ kind: "range", name: "speed", label: "Speed", min: 0, max: 3, step: 0.05, def: 1 }}
+          value={speed}
+          onChange={setSpeed}
+        />
+      </div>
+    </>
+  );
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 max-w-6xl w-full">
-        {/* Preview */}
-        <div className="flex flex-col gap-6">
-          <div
-            className="w-full aspect-video rounded-3xl shadow-2xl border border-neutral-200/50 dark:border-neutral-800/50 overflow-hidden relative"
-          >
-            <ShaderCanvas
-              key={activeFragment}
-              fragment={activeFragment}
-              className="absolute inset-0"
-            />
-            {/* Label overlay */}
-            <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-md text-white text-xs font-medium">
-              {selectedName}
+  return (
+    <main className="mk-page">
+      <PageHeader
+        icon={<Sparkles size={13} />}
+        title="Shader playground"
+        description="GPU backgrounds you can tune live. Start from a preset or write your own GLSL, then copy it as a React component."
+      >
+        <SegmentedTabs
+          label="Mode"
+          items={[
+            { value: "presets", label: "Presets" },
+            { value: "custom", label: "Custom GLSL" },
+          ]}
+          value={mode}
+          onChange={switchMode}
+        />
+      </PageHeader>
+
+      <div className="mk-workspace sh-workspace" data-mode={mode}>
+        <div className="mk-stack-col sh-main">
+          {/* Stage */}
+          <div className="sh-stage-wrap">
+            <div
+              ref={stageRef}
+              className="mk-canvas sh-stage"
+              data-expanded={expanded}
+              onPointerMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                rendererRef.current?.setPointer(
+                  (e.clientX - rect.left) / rect.width,
+                  1 - (e.clientY - rect.top) / rect.height,
+                );
+              }}
+              onPointerLeave={() => rendererRef.current?.setPointer(null)}
+            >
+              <div ref={hostRef} className="sh-host" />
+              {!supported && (
+                <div className="sh-fallback">
+                  WebGL isn’t available in this browser, so shaders can’t run here. You can still browse and copy the code.
+                </div>
+              )}
+              <div className="sh-overlay sh-overlay-top">
+                <span className="mk-badge">{displayName}</span>
+                <span className="mk-badge" ref={statsRef} aria-live="off">
+                  …
+                </span>
+              </div>
+              <div className="sh-overlay sh-overlay-bottom">
+                <div className="sh-btns">
+                  <button
+                    type="button"
+                    className="mk-icon-btn"
+                    aria-label={playing ? "Pause" : "Play"}
+                    title={playing ? "Pause" : "Play"}
+                    onClick={() => setPlayOverride(!playing)}
+                  >
+                    {playing ? <Pause size={14} /> : <Play size={14} />}
+                  </button>
+                  <button
+                    type="button"
+                    className="mk-icon-btn"
+                    aria-label="Restart from zero"
+                    title="Restart"
+                    onClick={() => rendererRef.current?.restart()}
+                  >
+                    <SkipBack size={14} />
+                  </button>
+                </div>
+                <div className="sh-btns">
+                  <button
+                    type="button"
+                    className="mk-icon-btn"
+                    aria-label="Download PNG of this frame"
+                    title="Download PNG"
+                    onClick={() => downloadPng("view")}
+                  >
+                    <Download size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className="mk-icon-btn"
+                    aria-label={isFull ? "Exit full screen" : "Full screen"}
+                    title={isFull ? "Exit full screen" : "Full screen"}
+                    onClick={toggleFullscreen}
+                  >
+                    {isFull ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Code Output */}
-          <div className="bg-neutral-50 dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-bold text-sm dark:text-white">
-                Fragment Shader
-              </h3>
-              <CopyButton text={activeFragment} />
+          {/* Code */}
+          <section className="mk-panel sh-code-panel">
+            <div className="mk-panel-head sh-code-head">
+              <SegmentedTabs
+                label="Code view"
+                size="sm"
+                items={[
+                  { value: "glsl", label: mode === "custom" ? "Editor" : "GLSL" },
+                  { value: "react", label: "React" },
+                ]}
+                value={codeTab}
+                onChange={setCodeTab}
+              />
+              <div className="flex items-center gap-2">
+                {mode === "presets" && codeTab === "glsl" && (
+                  <button type="button" className="mk-btn mk-btn-ghost mk-btn-sm" onClick={editPresetCopy}>
+                    <PenLine size={14} />
+                    <span className="hidden sm:inline">Edit a copy</span>
+                    <span className="sm:hidden">Edit</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="mk-btn mk-btn-ghost mk-btn-sm"
+                  onClick={codeTab === "react" ? copyReact : copyGlsl}
+                >
+                  <CopyIcon done={copied === codeTab} />
+                  {copied === codeTab ? "Copied" : "Copy"}
+                </button>
+              </div>
             </div>
-            <pre className="bg-neutral-100 dark:bg-neutral-950 p-4 rounded-xl text-xs font-mono text-neutral-600 dark:text-neutral-300 overflow-x-auto whitespace-pre-wrap max-h-64 overflow-y-auto">
-              <code>{activeFragment}</code>
-            </pre>
-          </div>
-        </div>
 
-        {/* Controls */}
-        <div className="flex flex-col gap-6">
-          <AnimatePresence mode="wait">
-            {editorMode === "presets" ? (
-              <motion.div
-                key="presets"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col gap-6"
-              >
-                <section>
-                  <h3 className="font-bold mb-4 dark:text-white text-sm">
-                    Shader Presets
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {presets.map((p) => (
+            {codeTab === "react" ? (
+              <pre className="mk-code sh-pre">
+                <code>{reactOut}</code>
+              </pre>
+            ) : mode === "custom" ? (
+              <>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <span className="sh-status" role="status">
+                    <span className="sh-dot" data-error={errors.length > 0} />
+                    {status === null
+                      ? "Compiling…"
+                      : status.ok
+                        ? `Compiled in ${Math.max(1, Math.round(status.ms))} ms`
+                        : `${errors.length} ${errors.length === 1 ? "error" : "errors"} · ${
+                            customGood ? "last working shader still running" : "showing the preset until it compiles"
+                          }`}
+                  </span>
+                  <span className="text-[12px] text-mk-faint">Auto-compiles as you type · ⌘S to compile now</span>
+                </div>
+                <CodeEditor
+                  key={docId}
+                  ref={editorRef}
+                  value={customCode}
+                  onChange={onCodeChange}
+                  onSubmit={compileNow}
+                  errorLines={errorLines}
+                />
+                {errors.length > 0 && (
+                  <div className="sh-errors">
+                    {errors.slice(0, 6).map((e, i) => (
                       <button
-                        key={p.name}
-                        onClick={() => selectPreset(p)}
-                        className={`group p-3 rounded-xl border-2 transition-all text-left ${
-                          selectedName === p.name
-                            ? "border-neutral-900 dark:border-white shadow-lg scale-[1.02]"
-                            : "border-transparent bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:scale-[1.02]"
-                        }`}
+                        key={`${e.line}-${i}`}
+                        type="button"
+                        className="sh-error"
+                        onClick={() => e.line && editorRef.current?.focusLine(e.line)}
                       >
-                        {/* Mini preview */}
-                        <div className="w-full h-16 rounded-lg mb-2 overflow-hidden">
-                          <ShaderCanvas fragment={p.fragment} />
-                        </div>
-                        <span className="text-[12px] font-semibold dark:text-white block">
-                          {p.name}
-                        </span>
-                        <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
-                          {p.description}
-                        </span>
+                        {e.line !== null && <span className="sh-error-line">Line {e.line}</span>}
+                        <span>{e.message}</span>
                       </button>
                     ))}
                   </div>
-                </section>
-              </motion.div>
+                )}
+                <p className="sh-help" id="sh-editor-help">
+                  Built-ins: <code>u_time</code>, <code>u_resolution</code>, <code>u_mouse</code> (0–1). Add{" "}
+                  <code>{"// @range 0 1 0.5"}</code> after a <code>float</code> uniform or <code>{"// @color #ff6b4a"}</code>{" "}
+                  after a <code>vec3</code> to get a control. <code>#version 300 es</code> works too. Tab indents; press
+                  Esc then Tab to leave the editor.
+                </p>
+              </>
             ) : (
-              <motion.div
-                key="custom"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="bg-neutral-50 dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800"
-              >
-                <ShaderEditor onFragmentChange={handleCustomFragment} />
-              </motion.div>
+              <pre className="mk-code sh-pre">
+                <code>{glslOut}</code>
+              </pre>
             )}
-          </AnimatePresence>
-
-          {/* Tip */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 dark:border-indigo-500/10">
-            <h4 className="text-sm font-bold mb-1 dark:text-white">💡 Tip</h4>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
-              {editorMode === "presets"
-                ? "Click any preset to preview it. Each shader runs on the GPU in real-time. Copy the GLSL code to use in your own projects."
-                : "Write GLSL fragment shaders with uniforms u_time, u_resolution, and u_mouse. Changes compile live — errors appear below the editor."}
-            </p>
-          </div>
+          </section>
         </div>
+
+        {/* Side panel */}
+        <aside className="mk-stack-col sh-side">
+          {mode === "presets" ? (
+            <section className="mk-panel">
+              <div className="mk-panel-head">
+                <h2 className="mk-panel-title">Presets</h2>
+                <span className="text-[12px] text-mk-faint">{presets.length} shaders</span>
+              </div>
+              <div className="sh-presets-scroll">
+                <div className="sh-presets">
+                  {presets.map((p) => (
+                    <PresetTile
+                      key={p.id}
+                      preset={p}
+                      active={p.id === presetId}
+                      overrides={presetValues[p.id]}
+                      animate={animateThumbs}
+                      onSelect={() => setPresetId(p.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : (
+            <section className="mk-panel">
+              <div className="mk-panel-head">
+                <h2 className="mk-panel-title">Starter templates</h2>
+                {undo !== null && (
+                  <button type="button" className="mk-btn mk-btn-ghost mk-btn-sm" onClick={undoReplace}>
+                    <Undo2 size={14} />
+                    Undo
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                {templates.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className="mk-option sh-template"
+                    data-active={customCode === t.source}
+                    onClick={() => replaceCustom(t.source)}
+                  >
+                    <span className="mk-option-title">{t.name}</span>
+                    <span className="mk-option-desc">{t.description}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="mk-panel">
+            <div className="mk-panel-head">
+              <h2 className="mk-panel-title">Controls</h2>
+              <button type="button" className="mk-btn mk-btn-ghost mk-btn-sm" onClick={resetControls}>
+                <RotateCcw size={14} />
+                Reset
+              </button>
+            </div>
+            {playbackControls}
+            <div className="sh-divider" />
+            {controls.length ? (
+              <div className="flex flex-col gap-4">
+                {controls.map((c) =>
+                  c.kind === "range" ? (
+                    <RangeControl
+                      key={c.name}
+                      control={c}
+                      value={values[c.name] as number}
+                      onChange={(v) => setValue(c.name, v)}
+                    />
+                  ) : (
+                    <ColorControl
+                      key={c.name}
+                      control={c}
+                      value={values[c.name] as string}
+                      onChange={(v) => setValue(c.name, v)}
+                    />
+                  ),
+                )}
+              </div>
+            ) : (
+              <p className="m-0 text-[12.5px] leading-relaxed text-mk-muted">
+                No tunable uniforms yet. Add <code className="font-mono text-mk-text">{"// @range 0 1 0.5"}</code> after a
+                float uniform to get a slider here.
+              </p>
+            )}
+          </section>
+
+          <section className="mk-panel">
+            <div className="mk-panel-head">
+              <h2 className="mk-panel-title">Export</h2>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button type="button" className="mk-btn mk-btn-primary w-full justify-center" onClick={copyReact}>
+                <CopyIcon done={copied === "react"} />
+                {copied === "react" ? "Copied React component" : "Copy React component"}
+              </button>
+              <button type="button" className="mk-btn mk-btn-ghost w-full justify-center" onClick={copyGlsl}>
+                <CopyIcon done={copied === "glsl"} />
+                {copied === "glsl" ? "Copied GLSL" : "Copy GLSL"}
+              </button>
+            </div>
+            <div className="sh-divider" />
+            <p className="mk-section-label">Image</p>
+            <div className="flex items-center gap-2">
+              <div className="mk-chips flex-1" role="radiogroup" aria-label="PNG size">
+                {(Object.keys(SIZES) as ExportSize[]).map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    role="radio"
+                    aria-checked={exportSize === k}
+                    className="mk-chip"
+                    data-active={exportSize === k}
+                    onClick={() => setExportSize(k)}
+                  >
+                    {SIZES[k].label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="mk-btn mk-btn-ghost mk-btn-sm"
+                onClick={() => downloadPng()}
+                disabled={exporting || !supported}
+              >
+                <Download size={14} />
+                PNG
+              </button>
+            </div>
+          </section>
+
+          <div className="mk-tip">
+            <Sparkles size={15} className="mt-0.5 flex-none text-mk-accent" />
+            <span>
+              The React export is self-contained: it sizes for retina screens, pauses off-screen and in background tabs,
+              and holds still for <strong>reduced motion</strong>.
+            </span>
+          </div>
+        </aside>
       </div>
-    </div>
+
+      <MorePlaygrounds current="/shaders" />
+    </main>
   );
 }

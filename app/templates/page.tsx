@@ -1,97 +1,45 @@
 "use client";
 
-import Link from "next/link";
+import { LayoutTemplate } from "lucide-react";
 import { editProfileCode } from "../compoents/EditProfileModalCode";
 import { appleAccordionCode } from "../compoents/componentCodes";
 import EditProfileModal from "../compoents/EditProfileModal";
 import AppleAccordion from "../compoents/apple-accordion/AppleAccordion";
-import ComponentCard from "../compoents/ComponentCard";
+import PageHeader from "../compoents/ui/PageHeader";
+import TemplateCard from "./TemplateCard";
 
-/* ─── templates page ──────────────────────────────────────── */
 export default function TemplatesPage() {
   return (
-    <main className="landing-root">
-      {/* ── Edge glow effects ─── */}
-      <div className="edge-glow edge-glow-left" />
-      <div className="edge-glow edge-glow-right" />
-      <div className="edge-glow edge-glow-bottom" />
-      <div className="edge-glow edge-glow-top" />
+    <main className="mk-page">
+      <PageHeader
+        icon={<LayoutTemplate size={13} />}
+        eyebrow="Templates"
+        title="Bigger pieces, ready to drop in"
+        description="Full-featured UI compositions you can copy and paste straight into your project. Every preview is live, so try it before you take it."
+      />
 
-      {/* ── Hero Section ─── */}
-      <header className="landing-hero">
-        <div className="landing-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
-        <h1 className="landing-title">Templates</h1>
-        <p className="landing-subtitle">
-          Full-featured, production-ready UI templates you can copy and 
-          paste directly into your project.
-        </p>
-
-        {/* ── Route Tabs ─── */}
-        <nav className="landing-tabs">
-          <Link href="/" className="landing-tab">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-            </svg>
-            Components
-          </Link>
-          <Link href="/templates" className="landing-tab landing-tab-active">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M3 9h18" />
-              <path d="M9 21V9" />
-            </svg>
-            Templates
-          </Link>
-        </nav>
-      </header>
-
-      {/* ── Templates Grid ─── */}
-      <section className="landing-grid landing-grid-templates">
-        <ComponentCard
-          title="Edit Profile"
-          description="A beautiful, responsive edit profile modal with an integrated preview. Click to expand."
+      <div className="flex flex-col gap-6">
+        <TemplateCard
+          id="edit-profile"
+          title="Edit profile modal"
+          description="A profile form with a live preview card. Click it to expand into a modal with a shared-layout transition; the preview updates as you type."
           code={editProfileCode}
+          tags={["framer-motion", "layoutId", "portal"]}
+          previewClassName="min-h-[520px] px-4 py-10 sm:px-10"
         >
-          <div className="flex items-center justify-center w-full h-full origin-center bg-transparent p-4 sm:p-8">
-            <EditProfileModal />
-          </div>
-        </ComponentCard>
+          <EditProfileModal />
+        </TemplateCard>
 
-        <ComponentCard
-          title="Apple Accordion"
-          description="A smooth, physics-based expandable accordion inspired by apple.com"
+        <TemplateCard
+          id="apple-accordion"
+          title="Apple accordion"
+          description="A physics-based expandable accordion inspired by apple.com, with a media panel that crossfades between items."
           code={appleAccordionCode}
+          tags={["framer-motion", "spring", "accordion"]}
         >
-          <div className="flex items-center justify-center w-full h-full origin-center bg-transparent">
-            <AppleAccordion />
-          </div>
-        </ComponentCard>
-      </section>
-
-      {/* ── Footer ─── */}
-      <footer className="landing-footer">
-        <p className="landing-footer-text">
-          Inspired by{" "}
-          <a href="https://transitions.dev/" target="_blank" rel="noopener noreferrer"
-            className="landing-footer-link">
-            transitions.dev
-          </a>
-        </p>
-        <p className="landing-footer-credit">
-          Made with ❤️ by{" "}
-          <a href="https://namansharma.com" target="_blank" rel="noopener noreferrer"
-            className="landing-footer-link landing-footer-link-bold">
-            Naman Sharma
-          </a>
-        </p>
-      </footer>
+          <AppleAccordion />
+        </TemplateCard>
+      </div>
     </main>
   );
 }
