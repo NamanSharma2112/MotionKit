@@ -31,7 +31,6 @@ import {
   Play,
   RotateCcw,
   ScanLine,
-  Terminal,
   Tornado,
   TriangleAlert,
   Waves,
@@ -645,7 +644,6 @@ export default function AsciiAnimatorPage() {
   return (
     <div className="mk-page">
       <PageHeader
-        icon={<Terminal size={13} />}
         title="ASCII animator"
         description="Turn an image, a built-in example or your camera into animated text art, then export it."
       />

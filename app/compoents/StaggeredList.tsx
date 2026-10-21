@@ -3,30 +3,45 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
-const items = [
-  { id: 1, title: "Component Library", color: "bg-blue-500" },
-  { id: 2, title: "Animation Guide", color: "bg-purple-500" },
-  { id: 3, title: "Design System", color: "bg-pink-500" },
-  { id: 4, title: "Motion Kit", color: "bg-indigo-500" },
-];
+const TITLES = ["Component Library", "Animation Guide", "Design System", "Motion Kit"];
+
+type Spring = { stiffness?: number; damping?: number; mass?: number; visualDuration?: number; bounce?: number };
 
 export default function StaggeredList({
   trigger,
   staggerDelay = 0.1,
   direction = "up",
+  titles = TITLES,
+  distance = 16,
+  blur = 6,
+  spring = { stiffness: 300, damping: 24 },
 }: {
   trigger?: number;
+  /** Seconds between each row. */
   staggerDelay?: number;
   direction?: "up" | "down";
+  titles?: string[];
+  /** How far (px) each row travels in. */
+  distance?: number;
+  /** Starting blur in px. */
+  blur?: number;
+  spring?: Spring;
 }) {
+  const items = titles.map((title, i) => ({ id: i + 1, title }));
   const [show, setShow] = useState(true);
+  const [prevTrigger, setPrevTrigger] = useState(trigger);
+
+  // Replay: unmount the list for a beat, then bring it back in.
+  if (trigger !== prevTrigger) {
+    setPrevTrigger(trigger);
+    if (trigger && trigger > 0) setShow(false);
+  }
 
   useEffect(() => {
-    if (trigger && trigger > 0) {
-      setShow(false);
-      setTimeout(() => setShow(true), 100);
-    }
-  }, [trigger]);
+    if (show) return;
+    const id = setTimeout(() => setShow(true), 100);
+    return () => clearTimeout(id);
+  }, [show]);
 
   const container: Variants = {
     hidden: { opacity: 0 },
@@ -42,23 +57,19 @@ export default function StaggeredList({
   const item: Variants = {
     hidden: {
       opacity: 0,
-      y: direction === "up" ? 16 : -16,
-      filter: "blur(6px)",
+      y: direction === "up" ? distance : -distance,
+      filter: `blur(${blur}px)`,
     },
     show: {
       opacity: 1,
       y: 0,
       filter: "blur(0px)",
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 24,
-      },
+      transition: { type: "spring", ...spring },
     },
   };
 
   return (
-    <div className="w-full max-w-xs space-y-3">
+    <div className="w-full max-w-xs">
       <AnimatePresence mode="wait">
         {show && (
           <motion.ul
@@ -71,21 +82,26 @@ export default function StaggeredList({
               <motion.li
                 key={i.id}
                 variants={item}
-                className="group flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-shadow cursor-default"
+                className="group flex h-12 cursor-default items-center gap-3 rounded-xl border border-black/[0.07] bg-white px-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_6px_-2px_rgba(0,0,0,0.04)] dark:border-white/10 dark:bg-neutral-900 dark:shadow-none"
               >
-                <div
-                  className={`w-2 h-2 rounded-full ${i.color} group-hover:scale-150 transition-transform`}
+                <span
+                  aria-hidden
+                  className="size-1.5 shrink-0 rounded-full bg-neutral-300 transition-colors duration-150 group-hover:bg-[#1f6bff] dark:bg-neutral-600"
                 />
-                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                <span className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
                   {i.title}
                 </span>
                 <svg
+                  aria-hidden
                   width="16"
                   height="16"
+                  viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
-                  className="ml-auto opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-neutral-400"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="ml-auto shrink-0 -translate-x-1 text-neutral-400 opacity-0 transition-[opacity,transform] duration-150 ease-out group-hover:translate-x-0 group-hover:opacity-100 dark:text-neutral-500"
                 >
                   <path d="M5 12h14" />
                   <path d="m12 5 7 7-7 7" />

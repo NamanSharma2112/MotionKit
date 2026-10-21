@@ -436,7 +436,6 @@ export default function ShadersPage() {
   return (
     <main className="mk-page">
       <PageHeader
-        icon={<Sparkles size={13} />}
         title="Shader playground"
         description="GPU backgrounds you can tune live. Start from a preset or write your own GLSL, then copy it as a React component."
       >

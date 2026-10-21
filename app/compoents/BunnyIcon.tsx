@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence, useAnimationFrame } from "motion/react";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { motion, AnimatePresence, useAnimationFrame, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 type Emotion = "sleeping" | "awake" | "surprised";
@@ -45,13 +45,14 @@ const Z_DEFS = [
   { d:"M36 1 L38.5 1 L36 3.5 L38.5 3.5",  sw:1.1, delay:2, tx:8,  ty:-18, s:[0.5,0.8] },
 ] as const;
 
-function FloatingZ({ d, sw, delay, tx, ty, s }: typeof Z_DEFS[number]) {
+function FloatingZ({ d, sw, delay, tx, ty, s, still }: typeof Z_DEFS[number] & { still?: boolean }) {
   return (
     <motion.path
       d={d} stroke="currentColor" strokeWidth={sw}
       strokeLinecap="round" strokeLinejoin="round" fill="none"
-      animate={{ opacity:[0,1,1,0], x:[0,tx], y:[0,ty], scale:[s[0],s[1]] }}
-      transition={{ duration:3, delay, repeat:Infinity, ease:"easeOut", times:[0,0.1,0.8,1] }}
+      // Reduced motion: the Z's sit still instead of drifting forever.
+      animate={still ? { opacity: 0.6 } : { opacity:[0,1,1,0], x:[0,tx], y:[0,ty], scale:[s[0],s[1]] }}
+      transition={still ? { duration: 0 } : { duration:3, delay, repeat:Infinity, ease:"easeOut", times:[0,0.1,0.8,1] }}
     />
   );
 }
@@ -60,38 +61,47 @@ function FloatingZ({ d, sw, delay, tx, ty, s }: typeof Z_DEFS[number]) {
 const CONFETTI_COLORS = ["#FF3F8E", "#04C2C9", "#2E5BFF", "#FFB238", "#5CD65C"];
 const CONFETTI_COUNT = 12;
 
+type Particle = { x: number; y: number; size: number; color: string; duration: number; rotate: number };
+
+function makeParticles(): Particle[] {
+  return Array.from({ length: CONFETTI_COUNT }, (_, i) => {
+    const angle = (i / CONFETTI_COUNT) * Math.PI * 2 + (Math.random() - 0.5);
+    const distance = 20 + Math.random() * 30;
+    return {
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance,
+      size: 1 + Math.random() * 2,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      duration: 0.8 + Math.random() * 0.4,
+      rotate: Math.random() * 360,
+    };
+  });
+}
+
 function Confetti() {
-  const particles = Array.from({ length: CONFETTI_COUNT });
+  // Rolled once per burst, so re-renders (the eyes update every frame) don't reshuffle the particles.
+  const [particles] = useState(makeParticles);
   return (
     <g transform="translate(20, 20)">
-      {particles.map((_, i) => {
-        const angle = (i / CONFETTI_COUNT) * Math.PI * 2 + (Math.random() - 0.5);
-        const distance = 20 + Math.random() * 30;
-        const x = Math.cos(angle) * distance;
-        const y = Math.sin(angle) * distance;
-        const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
-        const size = 1 + Math.random() * 2;
-        
-        return (
-          <motion.circle
-            key={i}
-            r={size}
-            fill={color}
-            initial={{ x: 0, y: 0, opacity: 1, scale: 0 }}
-            animate={{ 
-              x, 
-              y, 
-              opacity: [1, 1, 0],
-              scale: [0, 1.2, 0.5],
-              rotate: Math.random() * 360
-            }}
-            transition={{ 
-              duration: 0.8 + Math.random() * 0.4, 
-              ease: "easeOut" as const
-            }}
-          />
-        );
-      })}
+      {particles.map((p, i) => (
+        <motion.circle
+          key={i}
+          r={p.size}
+          fill={p.color}
+          initial={{ x: 0, y: 0, opacity: 0, scale: 0.9 }}
+          animate={{
+            x: p.x,
+            y: p.y,
+            opacity: [0, 1, 1, 0],
+            scale: [0.9, 1.2, 0.5],
+            rotate: p.rotate
+          }}
+          transition={{
+            duration: p.duration,
+            ease: "easeOut" as const
+          }}
+        />
+      ))}
     </g>
   );
 }
@@ -122,7 +132,7 @@ function Eyes({ emotion, pupil }: EyesProps) {
     return (
       <AnimatePresence mode="wait">
         <motion.g key="surprised-eyes"
-          initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+          initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
           transition={{ type: "spring", stiffness: 500, damping: 22 }}>
           <circle cx={EYE_L.x} cy={EYE_L.y} r={2.3} fill={fill} opacity={0.4} />
           <circle cx={EYE_R.x} cy={EYE_R.y} r={2.3} fill={fill} opacity={0.4} />
@@ -165,51 +175,46 @@ export default function BunnyIcon({
   trigger,
 }: BunnyIconProps & { trigger?: number }) {
   const [timeEmotion, setTimeEmotion] = useState<"sleeping" | "awake">(getTimeEmotion);
-  const [emotion, setEmotion] = useState<Emotion>(forceEmotion ?? getTimeEmotion());
   const [isSurprised, setIsSurprised] = useState(false);
+  // Bumps on every click so a second click restarts the surprise timer.
+  const [surprises, setSurprises] = useState(0);
+  const [prevTrigger, setPrevTrigger] = useState(trigger);
   const [isHovered, setIsHovered] = useState(false);
+  const reduceMotion = useReducedMotion();
+
+  // Surprise wins, then a forced emotion, then the clock.
+  const emotion: Emotion = isSurprised ? "surprised" : (forceEmotion ?? timeEmotion);
 
   // Pupil tracking state (raw target + lerped current)
   const pupilTarget  = useRef({ x: 0, y: 0 });
   const pupilCurrent = useRef({ x: 0, y: 0 });
   const [pupil, setPupil] = useState({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
-  const surpriseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Clock: re-check every minute ────────────────────────────────────────
   useEffect(() => {
-    const tick = () => {
-      const next = getTimeEmotion();
-      setTimeEmotion(next);
-      if (!isSurprised && !forceEmotion) setEmotion(next);
-    };
-    tick();
-    const id = setInterval(tick, 60_000);
+    const id = setInterval(() => setTimeEmotion(getTimeEmotion()), 60_000);
     return () => clearInterval(id);
-  }, [isSurprised, forceEmotion]);
-
-  // Sync forceEmotion prop
-  useEffect(() => {
-    if (forceEmotion) setEmotion(forceEmotion);
-  }, [forceEmotion]);
-
-  // Sync trigger to click handler
-  useEffect(() => {
-    if (trigger && trigger > 0) {
-      handleClick();
-    }
-  }, [trigger]);
+  }, []);
 
   // ── Click → surprised ────────────────────────────────────────────────────
-  const handleClick = useCallback(() => {
-    if (surpriseTimer.current) clearTimeout(surpriseTimer.current);
+  const handleClick = () => {
     setIsSurprised(true);
-    setEmotion("surprised");
-    surpriseTimer.current = setTimeout(() => {
-      setIsSurprised(false);
-      setEmotion(forceEmotion ?? timeEmotion);
-    }, 1400);
-  }, [forceEmotion, timeEmotion]);
+    setSurprises((n) => n + 1);
+  };
+
+  // Sync trigger to click handler
+  if (trigger !== prevTrigger) {
+    setPrevTrigger(trigger);
+    if (trigger && trigger > 0) handleClick();
+  }
+
+  // Settle back after 1.4s (restarted by every click).
+  useEffect(() => {
+    if (surprises === 0) return;
+    const id = setTimeout(() => setIsSurprised(false), 1400);
+    return () => clearTimeout(id);
+  }, [surprises]);
 
   // ── Global Mouse tracking ──────────────────────────────────────────────────
   useEffect(() => {
@@ -221,17 +226,17 @@ export default function BunnyIcon({
       const dx = e.clientX - cx;
       const dy = e.clientY - cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      
+
       // Increase tracking radius to follow throughout the page
-      const radius = 1000; 
+      const radius = 1000;
       const strength = Math.min(dist / radius, 1);
-      
+
       const svgScale = 40 / rect.width;
       const rawX = dx * svgScale * strength;
       const rawY = dy * svgScale * strength;
       const angle = Math.atan2(rawY, rawX);
       const mag   = Math.min(Math.sqrt(rawX * rawX + rawY * rawY), MAX_TRAVEL);
-      
+
       pupilTarget.current = { x: Math.cos(angle) * mag, y: Math.sin(angle) * mag };
     };
 
@@ -243,9 +248,14 @@ export default function BunnyIcon({
   useAnimationFrame(() => {
     if (emotion !== "awake") return;
     const lerp = 0.12;
-    pupilCurrent.current.x += (pupilTarget.current.x - pupilCurrent.current.x) * lerp;
-    pupilCurrent.current.y += (pupilTarget.current.y - pupilCurrent.current.y) * lerp;
-    setPupil({ ...pupilCurrent.current });
+    const cur = pupilCurrent.current;
+    const dx = pupilTarget.current.x - cur.x;
+    const dy = pupilTarget.current.y - cur.y;
+    // Settled: skip the re-render.
+    if (Math.abs(dx) < 0.001 && Math.abs(dy) < 0.001) return;
+    cur.x += dx * lerp;
+    cur.y += dy * lerp;
+    setPupil({ ...cur });
   });
 
   const sleeping = emotion === "sleeping";
@@ -267,19 +277,36 @@ export default function BunnyIcon({
     surprised: { rotate: [0, 25, 15], transition: { duration: 0.2, ease: "backOut" as const } }
   };
 
-  const earE  = currentEarVariants[emotion];
-  const earRE = currentEarRVariants[emotion];
-  const bodyE = bodyVariants[emotion];
+  // Reduced motion: no endless ear wiggle or breathing; one-off reactions still play.
+  const still = { rotate: 0, y: 0, transition: { duration: 0 } };
+  const loops = emotion !== "surprised";
+  const earE  = reduceMotion && loops ? still : currentEarVariants[emotion];
+  const earRE = reduceMotion && loops ? still : currentEarRVariants[emotion];
+  const bodyE = reduceMotion && emotion === "sleeping" ? still : bodyVariants[emotion];
 
   return (
+    // Focusable wrapper lives outside the keyed SVG, so focus survives the remount on each emotion change.
+    <span
+      role="button"
+      tabIndex={0}
+      aria-label="Bunny mascot. Press to surprise it."
+      onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
+      className="inline-flex rounded-lg outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1f6bff]"
+    >
     <motion.svg
       ref={svgRef}
       width={size} height={size}
       viewBox="0 0 40 40" fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
       className={className}
       style={{ overflow: "visible", color, cursor: "pointer" }}
-      onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       key={emotion}
@@ -292,7 +319,7 @@ export default function BunnyIcon({
         {/* ── Left ear ── */}
         <motion.g transform="rotate(-15,7,10) translate(0,1)"
           style={{ transformOrigin: "7px 10px" }}
-          animate={earE} transition={earVariants[emotion].transition}>
+          animate={earE} transition={earE.transition}>
           <path
             d="M3.738 10.2164L7.224 2.007H9.167L5.676 10.2164H3.738ZM10.791 6.427C10.791 5.903 10.726 5.428 10.596 5C10.47 4.572 10.292 4.166 10.063 3.784C9.833 3.398 9.56 3.018 9.243 2.643C8.926 2.265 8.767 2.076 8.767 2.076L10.24 0.958C10.24 0.958 10.433 1.172 10.819 1.6C11.209 2.024 11.559 2.491 11.869 2.999C12.178 3.507 12.413 4.042 12.574 4.604C12.734 5.166 12.814 5.774 12.814 6.427C12.814 7.107 12.73 7.73 12.562 8.296C12.394 8.858 12.153 9.397 11.84 9.913C11.526 10.425 11.181 10.883 10.802 11.288C10.428 11.697 10.24 11.902 10.24 11.902L8.767 10.784C8.767 10.784 8.924 10.595 9.237 10.216C9.554 9.842 9.83 9.46 10.063 9.07C10.3 8.676 10.479 8.267 10.602 7.843C10.728 7.415 10.791 6.943 10.791 6.427Z"
             fill="currentColor" opacity={0.4} />
@@ -301,7 +328,7 @@ export default function BunnyIcon({
         {/* ── Right ear ── */}
         <motion.g transform="rotate(15,19,10) translate(0,1)"
           style={{ transformOrigin: "19px 10px" }}
-          animate={earRE} transition={earRVariants[emotion].transition}>
+          animate={earRE} transition={earRE.transition}>
           <path
             d="M15.003 10.2164L18.489 2.007H20.432L16.941 10.2164H15.003ZM22.056 6.427C22.056 5.903 21.991 5.428 21.861 5C21.735 4.572 21.557 4.166 21.328 3.784C21.098 3.398 20.825 3.018 20.508 2.643C20.191 2.265 20.032 2.076 20.032 2.076L21.505 0.958C21.505 0.958 21.698 1.172 22.084 1.6C22.474 2.024 22.824 2.491 23.133 2.999C23.443 3.507 23.678 4.042 23.839 4.604C23.999 5.166 24.079 5.774 24.079 6.427C24.079 7.107 23.995 7.73 23.827 8.296C23.659 8.858 23.418 9.397 23.105 9.913C22.791 10.425 22.445 10.883 22.067 11.288C21.693 11.697 21.505 11.902 21.505 11.902L20.032 10.784C20.032 10.784 20.189 10.595 20.502 10.216C20.819 9.842 21.094 9.46 21.328 9.07C21.565 8.676 21.744 8.267 21.866 7.843C21.993 7.415 22.056 6.943 22.056 6.427Z"
             fill="currentColor" opacity={0.4} />
@@ -322,11 +349,12 @@ export default function BunnyIcon({
           <motion.g
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}>
-            {Z_DEFS.map((def, i) => <FloatingZ key={i} {...def} />)}
+            {Z_DEFS.map((def, i) => <FloatingZ key={i} {...def} still={!!reduceMotion} />)}
           </motion.g>
         )}
       </AnimatePresence>
     </motion.svg>
+    </span>
   );
 }
 

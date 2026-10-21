@@ -3,15 +3,9 @@
 import Link from "next/link";
 import * as Accordion from "@radix-ui/react-accordion";
 import {
-  Code2,
-  FileCode2,
-  Hand,
   LayoutGrid,
   LayoutTemplate,
-  Moon,
   Plus,
-  Sparkles,
-  Waves,
 } from "lucide-react";
 import { GithubIcon, MotionIcon, ReactIcon, TailwindIcon } from "./icons";
 import { playgrounds, templatesLink } from "../site";
@@ -23,9 +17,6 @@ export function Playgrounds() {
   return (
     <section className="mk-section" id="playgrounds">
       <div className="mk-section-head">
-        <span className="mk-eyebrow">
-          <LayoutGrid size={13} /> Beyond components
-        </span>
         <h2 className="mk-h2">Playgrounds for every kind of motion</h2>
         <p className="mk-lead">
           Seven browser tools for drawing, shading and animating, plus templates that put the
@@ -45,35 +36,34 @@ export function Playgrounds() {
 /* ─── Principles ──────────────────────────────── */
 
 const principles = [
-  { icon: <Waves size={16} />, title: "Spring physics", desc: "Stiffness and damping instead of guessed durations." },
-  { icon: <Hand size={16} />, title: "Interruptible", desc: "Change your mind mid-gesture and the motion follows." },
-  { icon: <FileCode2 size={16} />, title: "One file each", desc: "No package to install. The code is yours to edit." },
-  { icon: <Code2 size={16} />, title: "TypeScript first", desc: "Typed props, sensible defaults, zero config." },
-  { icon: <Moon size={16} />, title: "Light and dark", desc: "Every demo is tuned for both themes." },
-  { icon: <Sparkles size={16} />, title: "Small details", desc: "Blur on crossfades, press states, staggered entrances." },
+  { title: "Spring physics", desc: "Stiffness and damping instead of guessed durations, so motion settles the way objects do." },
+  { title: "Interruptible", desc: "Change your mind mid-gesture and the animation follows from where it is." },
+  { title: "One file each", desc: "No package to install or keep up to date. The code is yours to edit." },
+  { title: "Tunable live", desc: "Every component exposes its springs and timings as props you can dial in on this page." },
+  { title: "Light and dark", desc: "Each demo is checked against both themes before it ships." },
+  { title: "Small details", desc: "Blur on crossfades, press feedback and staggered entrances come built in." },
 ];
 
 export function Principles() {
   return (
     <section className="mk-section">
-      <div className="mk-section-head">
-        <h2 className="mk-h2">Copy once. Own it forever.</h2>
-        <p className="mk-lead">
-          MotionKit isn&apos;t a dependency. Each component is a single file you paste into your
-          project and shape however you like.
-        </p>
-      </div>
-      <ul className="mk-principles">
-        {principles.map((p) => (
-          <li key={p.title}>
-            <span className="mk-principle-icon">{p.icon}</span>
-            <div>
-              <p className="mk-card-title">{p.title}</p>
-              <p className="mk-card-desc">{p.desc}</p>
+      <div className="mk-principles-wrap">
+        <div className="mk-principles-intro">
+          <h2 className="mk-h2">Copy once. Own it forever.</h2>
+          <p className="mk-lead">
+            MotionKit isn&apos;t a dependency. Each component is a single file you paste into your
+            project and shape however you like.
+          </p>
+        </div>
+        <dl className="mk-principles">
+          {principles.map((p) => (
+            <div key={p.title} className="mk-principle">
+              <dt>{p.title}</dt>
+              <dd>{p.desc}</dd>
             </div>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </dl>
+      </div>
     </section>
   );
 }
@@ -172,29 +162,29 @@ export function ClosingCta() {
     <section className="mk-section mk-cta">
       <div className="mk-fan" aria-hidden>
         <div className="mk-fan-card" style={{ "--r": "-14deg", "--x": "-150px", "--y": "34px", "--z": 0 } as React.CSSProperties}>
-          <p className="mk-tile-head"><span>Inbox</span></p>
+          <p className="mk-tile-head"><span>Staggered list</span></p>
           <div className="mk-fan-rows"><span /><span /><span /></div>
         </div>
         <div className="mk-fan-card" style={{ "--r": "-6deg", "--x": "-76px", "--y": "10px" } as React.CSSProperties}>
-          <p className="mk-tile-head"><span>Now playing</span></p>
+          <p className="mk-tile-head"><span>Play / pause</span></p>
           <div className="mk-fan-play" />
         </div>
         <div className="mk-fan-card mk-fan-front" style={{ "--r": "0deg", "--x": "0px", "--y": "0px" } as React.CSSProperties}>
-          <p className="mk-tile-head">
-            <span>Copies this week</span>
-            <span className="mk-tile-meta">+14.8%</span>
-          </p>
-          <p className="mk-fan-num">100+</p>
-          <svg viewBox="0 0 160 40" className="mk-fan-spark">
-            <path d="M0 32 L18 30 L30 34 L44 20 L58 26 L72 12 L88 22 L102 8 L118 18 L134 6 L160 14" />
-          </svg>
+          <p className="mk-tile-head"><span>magnetic-button.tsx</span></p>
+          <pre className="mk-fan-code">
+            <span className="mk-tok-kw">import</span> MagneticButton{"\n"}
+            <span className="mk-tok-kw">from</span> <span className="mk-tok-str">&quot;./motion&quot;</span>{"\n\n"}
+            {"<"}<span className="mk-tok-name">MagneticButton</span>{"\n"}
+            {"  strength={0.4}\n"}
+            {"/>"}
+          </pre>
         </div>
         <div className="mk-fan-card" style={{ "--r": "6deg", "--x": "76px", "--y": "10px" } as React.CSSProperties}>
-          <p className="mk-tile-head"><span>Search</span></p>
+          <p className="mk-tile-head"><span>Gooey search</span></p>
           <div className="mk-fan-search" />
         </div>
         <div className="mk-fan-card" style={{ "--r": "14deg", "--x": "150px", "--y": "34px", "--z": 0 } as React.CSSProperties}>
-          <p className="mk-tile-head"><span>Wobble</span></p>
+          <p className="mk-tile-head"><span>Squiggly text</span></p>
           <p className="mk-fan-word">Wiggly!</p>
         </div>
       </div>

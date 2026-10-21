@@ -3,25 +3,29 @@
 import { AnimatePresence, motion } from "motion/react"
 import { useState } from "react"
 
+type Timing = { duration: number; enterScale: number; exitScale: number }
+
 function ModeExample({
     mode,
     icon,
     state,
+    timing,
 }: {
     mode: "sync" | "wait" | "popLayout"
     icon: React.ReactNode
     state: boolean
+    timing: Timing
 }) {
     const defaultEase = [0.26, 0.02, 0.23, 0.94]
 
-    // Translating dynamic styles to Tailwind template literals
+    // Two clearly different items, legible on light and dark surfaces.
     const dynamicClasses = state
-        ? "bg-white text-black border-neutral-200 dark:border-neutral-800"
-        : "bg-transparent text-white border-white"
+        ? "bg-white text-neutral-900 border-black/[0.08] shadow-[0_1px_2px_rgba(0,0,0,0.05),0_4px_12px_-4px_rgba(0,0,0,0.1)] dark:bg-neutral-800 dark:text-white dark:border-white/10 dark:shadow-none"
+        : "bg-[#1f6bff] text-white border-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_4px_12px_-4px_rgba(31,107,255,0.5)]"
 
     const motionProps = {
-        className: `absolute inset-0 flex items-center justify-center rounded-full border-2 ${dynamicClasses}`,
-        initial: { opacity: 0, scale: 0.6 },
+        className: `absolute inset-0 flex items-center justify-center rounded-full border ${dynamicClasses}`,
+        initial: { opacity: 0, scale: timing.enterScale },
         animate: {
             opacity: 1,
             scale: 1,
@@ -29,14 +33,14 @@ function ModeExample({
         },
         exit: {
             opacity: 0,
-            scale: 0.8,
+            scale: timing.exitScale,
             ease: mode === "wait" ? [0.46, 0.04, 0.97, 0.44] : defaultEase,
         },
-        transition: { duration: 0.3 },
+        transition: { duration: timing.duration },
     }
 
     return (
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-3">
             <div className="relative flex h-20 w-20 flex-col items-center justify-center">
                 <AnimatePresence mode={mode}>
                     <motion.div key={String(state)} {...motionProps}>
@@ -44,36 +48,50 @@ function ModeExample({
                     </motion.div>
                 </AnimatePresence>
             </div>
-            <code className="text-sm font-medium text-neutral-900 dark:text-white opacity-90">
+            <code className="font-mono text-[13px] font-medium text-neutral-500 dark:text-neutral-400">
                 {mode}
             </code>
         </div>
     )
 }
 
-export default function AnimatePresenceModes() {
+export default function AnimatePresenceModes({
+    duration = 0.3,
+    enterScale = 0.6,
+    exitScale = 0.8,
+}: {
+    /** Seconds for each enter and exit. */
+    duration?: number
+    /** Scale an item grows from as it enters. */
+    enterScale?: number
+    /** Scale an item shrinks to as it exits. */
+    exitScale?: number
+} = {}) {
     const [state, setState] = useState(true)
+    const timing = { duration, enterScale, exitScale }
 
     const switchItems = () => {
         setState((prev) => !prev)
     }
 
     return (
-        <div className="flex flex-col items-center gap-10 rounded-xl text-neutral-900 dark:text-white">
+        <div className="flex flex-col items-center gap-10 text-neutral-900 dark:text-white">
             <div className="flex w-full items-center justify-center gap-8 sm:gap-[60px]">
-                <ModeExample mode="sync" icon={<SyncIcon />} state={state} />
-                <ModeExample mode="wait" icon={<WaitIcon />} state={state} />
+                <ModeExample mode="sync" icon={<SyncIcon />} state={state} timing={timing} />
+                <ModeExample mode="wait" icon={<WaitIcon />} state={state} timing={timing} />
                 <ModeExample
                     mode="popLayout"
                     icon={<PopLayoutIcon />}
                     state={state}
+                    timing={timing}
                 />
             </div>
 
             <motion.button
-                className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-8 py-3 font-semibold shadow-sm text-neutral-900 dark:text-white"
+                type="button"
+                className="h-10 rounded-[10px] border border-black/[0.08] bg-white px-6 text-sm font-medium text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none transition-colors duration-150 hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-[#1f6bff]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/10 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 dark:focus-visible:ring-offset-neutral-900"
                 onClick={switchItems}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.97 }}
             >
                 Switch
             </motion.button>
@@ -84,6 +102,7 @@ export default function AnimatePresenceModes() {
 function SyncIcon() {
     return (
         <svg
+            aria-hidden
             width="24"
             height="24"
             viewBox="0 0 24 24"
@@ -104,6 +123,7 @@ function SyncIcon() {
 function WaitIcon() {
     return (
         <svg
+            aria-hidden
             width="24"
             height="24"
             viewBox="0 0 24 24"
@@ -128,6 +148,7 @@ function WaitIcon() {
 function PopLayoutIcon() {
     return (
         <svg
+            aria-hidden
             width="24"
             height="24"
             viewBox="0 0 24 24"

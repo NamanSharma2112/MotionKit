@@ -10,7 +10,6 @@ import {
   CopyPlus,
   Eye,
   EyeOff,
-  Layers,
   MousePointerClick,
   PanelTop,
   Plus,
@@ -295,7 +294,6 @@ export default function ShadowPage() {
   return (
     <main className="mk-page">
       <PageHeader
-        icon={<Layers size={13} />}
         title="Shadow studio"
         description="Stack soft, realistic box shadows layer by layer, aim them with a light source, then copy the CSS or Tailwind class."
       />

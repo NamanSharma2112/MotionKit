@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Box } from "lucide-react";
+
 import PageHeader from "../compoents/ui/PageHeader";
 import MorePlaygrounds from "../compoents/ui/MorePlaygrounds";
 import EditorLoader from "./EditorLoader";
@@ -14,7 +14,6 @@ export default function IsometricPage() {
   return (
     <div className="mk-page">
       <PageHeader
-        icon={<Box size={13} />}
         title="Isometric maker"
         description="Stack blocks on an isometric grid, start from an example, and export crisp SVG or PNG."
       />

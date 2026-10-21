@@ -1,65 +1,90 @@
 "use client"
-import React, { useEffect } from 'react'
-import { motion, SVGMotionProps } from "motion/react"
-import { SVGProps } from "react";
-import { filter } from 'motion/react-client';
+import React, { useEffect, useId } from 'react'
+import { motion, LayoutGroup, SVGMotionProps } from "motion/react"
 
-const Gooey = () => {
+type GooeyProps = {
+  placeholder?: string
+  /** Width (px) of the input once expanded. */
+  expandedWidth?: number
+  /** Blur behind the goo; higher melts the shapes together more. */
+  gooBlur?: number
+  spring?: { duration?: number; visualDuration?: number; bounce?: number; stiffness?: number; damping?: number; mass?: number }
+}
+
+const Gooey = ({
+  placeholder = 'Search',
+  expandedWidth = 200,
+  gooBlur = 5,
+  spring = { duration: 0.4, bounce: 0.25 },
+}: GooeyProps = {}) => {
   const [isExpanded, setIsExpanded] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
-  const buttonVariants = { collapsed: { width: 115, marginLeft:0 }, expanded: { width: 200, marginLeft:50 } }
+  // Unique ids so several instances on one page don't share a filter or layout animation.
+  const uid = useId().replace(/:/g, '')
+  const filterId = `gooey-filter-${uid}`
+  const buttonVariants = { collapsed: { width: 115, marginLeft: 0 }, expanded: { width: expandedWidth, marginLeft: 50 } }
   const [searchText, setSearchText] = React.useState('')
-  const iconBubbleVariants = { collapsed: { scale: 0, opacity: 0 }, expanded: { scale: 1, opacity: 1 } }
-  const TRANSITION =  { duration:0.4, type: "spring" as const, bounce:0.25 }
-  
-  useEffect(() => {
-    if (isExpanded) {
-      inputRef.current?.focus();
-    } else {
-        setSearchText('')
-    }
-  }, [isExpanded]);
- 
-  return (
-    <>
-      <SVGFilter />
-      <div style={{ filter: 'url(#gooey-filter)' }} className='relative flex h-10 items-center justify-center'>
-        <motion.div
-            variants={buttonVariants}
-            initial="collapsed"
-            animate={isExpanded ? "expanded" : "collapsed"}
-            transition={TRANSITION}
-            className="h-10 flex items-center justify-center"
-        >
-            <button
-                onClick={() => setIsExpanded(true)}
-                className='h-10 w-full cursor-pointer rounded-full font-medium gap-2 justify-center flex items-center px-4 bg-black text-white'
-            >
-                {!isExpanded && <SearchIcon className="h-10 w-10" />}
+  const iconBubbleVariants = { collapsed: { scale: 0.9, opacity: 0 }, expanded: { scale: 1, opacity: 1 } }
+  const TRANSITION = { type: "spring" as const, ...spring }
 
-                <motion.input
-                    ref={inputRef}
-                    layoutId="input"
-                    type='text'
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    onBlur={() => !searchText && setIsExpanded(false)}
-                    placeholder='Search'
-                    className='h-full w-full bg-transparent text-sm text-white outline-none placeholder:text-white/50 font-extralight' />
-            </button>
+  useEffect(() => {
+    if (isExpanded) inputRef.current?.focus()
+  }, [isExpanded])
+
+  const collapse = () => {
+    setIsExpanded(false)
+    setSearchText('')
+  }
+
+  return (
+    <LayoutGroup id={uid}>
+      <SVGFilter id={filterId} blur={gooBlur} />
+      <div style={{ filter: `url(#${filterId})` }} className='relative flex h-10 items-center justify-center'>
+        <motion.div
+          variants={buttonVariants}
+          initial="collapsed"
+          animate={isExpanded ? "expanded" : "collapsed"}
+          transition={TRANSITION}
+          className="flex h-10 items-center justify-center"
+        >
+          <div
+            onClick={() => setIsExpanded(true)}
+            className='flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-neutral-900 px-4 text-white dark:bg-white dark:text-neutral-900'
+          >
+            {!isExpanded && <SearchIcon className="size-[22px] shrink-0" aria-hidden />}
+
+            <motion.input
+              ref={inputRef}
+              layoutId="input"
+              type='text'
+              aria-label={placeholder}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onFocus={() => setIsExpanded(true)}
+              onBlur={() => !searchText && collapse()}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  collapse()
+                  inputRef.current?.blur()
+                }
+              }}
+              placeholder={placeholder}
+              className='h-full w-full min-w-0 cursor-pointer bg-transparent text-sm font-medium text-white outline-none placeholder:text-white/55 focus:cursor-text dark:text-neutral-900 dark:placeholder:text-neutral-900/50'
+            />
+          </div>
         </motion.div>
 
         <motion.div
-            variants={iconBubbleVariants}
-            initial="collapsed"
-            animate={isExpanded ? "expanded" : "collapsed"}
-            transition={TRANSITION}
-            className='absolute top-1/2 left-0 size-10 -translate-y-1/2 bg-black items-center justify-center flex rounded-full'
+          variants={iconBubbleVariants}
+          initial="collapsed"
+          animate={isExpanded ? "expanded" : "collapsed"}
+          transition={TRANSITION}
+          className='absolute top-1/2 left-0 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
         >
-            <SearchIcon className="h-7 w-8 text-white" />
+          <SearchIcon className="size-[22px]" aria-hidden />
         </motion.div>
       </div>
-    </>
+    </LayoutGroup>
   )
 }
 
@@ -69,7 +94,7 @@ export default Gooey
 const SearchIcon = (props: SVGMotionProps<SVGSVGElement>) => {
   return (
     <motion.svg
-     layoutId="search-icon"
+      layoutId="search-icon"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
@@ -83,24 +108,24 @@ const SearchIcon = (props: SVGMotionProps<SVGSVGElement>) => {
   );
 };
 
-const SVGFilter = () => {
-    return (
-        <svg className="absolute hidden h-0 w-0">
-  <defs>
-    <filter id="gooey-filter" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
-      <feColorMatrix
-        in="blur"
-        type="matrix"
-        values="1 0 0 0 0
-                0 1 0 0 0
-                0 0 1 0 0
-                0 0 0 20 -10"
-        result="goo"
-      />
-      <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-    </filter>
-  </defs>
-</svg>
-    )
+const SVGFilter = ({ id, blur }: { id: string; blur: number }) => {
+  return (
+    <svg aria-hidden className="pointer-events-none absolute h-0 w-0">
+      <defs>
+        <filter id={id} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation={blur} result="blur" />
+          <feColorMatrix
+            in="blur"
+            type="matrix"
+            values="1 0 0 0 0
+                    0 1 0 0 0
+                    0 0 1 0 0
+                    0 0 0 20 -10"
+            result="goo"
+          />
+          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+        </filter>
+      </defs>
+    </svg>
+  )
 }

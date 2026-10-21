@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useReducedMotion } from "motion/react";
-import { Check, Code2, Copy, Pause, Play, RotateCcw, SquareDashed } from "lucide-react";
+import { Check, Copy, Pause, Play, RotateCcw, SquareDashed } from "lucide-react";
 import PageHeader from "../compoents/ui/PageHeader";
 import MorePlaygrounds from "../compoents/ui/MorePlaygrounds";
 import { ColorRow, Range } from "./controls";
@@ -153,7 +153,6 @@ export default function CSSPlaygroundPage() {
   return (
     <main className="mk-page">
       <PageHeader
-        icon={<Code2 size={13} />}
         title="CSS playground"
         description="Shape, transform, filter and fill one element, watch it transition, then copy the CSS."
       />

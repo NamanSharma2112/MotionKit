@@ -30,10 +30,29 @@ const INITIAL_STACK = [
   },
 ];
 
-const STACK_SPRING = { type: "spring" as const, stiffness: 380, damping: 32 };
+type Spring = { stiffness?: number; damping?: number; mass?: number; visualDuration?: number; bounce?: number };
 
-const StackedCards = () => {
+type StackSettings = {
+  spring: Spring;
+  /** Pixels a card must be dragged to send it to the back. */
+  swipeThreshold: number;
+  /** Vertical offset (%) between stacked cards. */
+  offset: number;
+  /** How much smaller each card behind gets. */
+  scaleStep: number;
+  /** Degrees a card tilts at full drag. */
+  maxRotate: number;
+};
+
+const StackedCards = ({
+  spring = { stiffness: 380, damping: 32 },
+  swipeThreshold = 100,
+  offset = 5,
+  scaleStep = 0.05,
+  maxRotate = 15,
+}: Partial<StackSettings> = {}) => {
   const [stack, setStack] = React.useState(INITIAL_STACK);
+  const settings = { spring, swipeThreshold, offset, scaleStep, maxRotate };
 
   return (
     <div className="relative flex h-96 w-80 items-center justify-center">
@@ -43,6 +62,7 @@ const StackedCards = () => {
           item={item}
           index={index}
           total={stack.length}
+          settings={settings}
           onSendToBack={() => {
             setStack((s) => [...s.slice(1), s[0]]);
           }}
@@ -58,6 +78,7 @@ type StackedCardsProps = {
   item: typeof INITIAL_STACK[number];
   index: number;
   total: number;
+  settings: StackSettings;
   onSendToBack: () => void;
 };
 
@@ -65,10 +86,12 @@ const StackedCardItem: React.FC<StackedCardsProps> = ({
   item,
   index,
   total,
+  settings,
   onSendToBack,
 }) => {
+  const STACK_SPRING = { type: "spring" as const, ...settings.spring };
   const x = useMotionValue(0);
-  const rotate = useTransform(x, [-150, 0, 150], [-15, 0, 15]);
+  const rotate = useTransform(x, [-150, 0, 150], [-settings.maxRotate, 0, settings.maxRotate]);
   const isTop = index === 0;
 
   return (
@@ -81,7 +104,7 @@ const StackedCardItem: React.FC<StackedCardsProps> = ({
       onDragEnd={(_, info) => {
         if (!isTop) return;
 
-        if (Math.abs(info.offset.x) > 100) {
+        if (Math.abs(info.offset.x) > settings.swipeThreshold) {
           onSendToBack();
         }
 
@@ -89,25 +112,28 @@ const StackedCardItem: React.FC<StackedCardsProps> = ({
       }}
       style={{ zIndex: total - index, rotate, x }}
       animate={{
-        y: `${-index * 5}%`,
-        scale: 1 - index * 0.05,
+        y: `${-index * settings.offset}%`,
+        scale: 1 - index * settings.scaleStep,
       }}
       transition={STACK_SPRING}
-      className="absolute inset-0 cursor-grab active:cursor-grabbing"
+      className="absolute inset-0 cursor-grab overflow-hidden rounded-[20px] bg-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_32px_-12px_rgba(0,0,0,0.3)] ring-1 ring-black/[0.06] active:cursor-grabbing dark:bg-neutral-800 dark:ring-white/10"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={item.src}
         alt={item.title}
-        className="h-full w-full object-cover rounded-xl pointer-events-none"
+        draggable={false}
+        className="pointer-events-none h-full w-full object-cover"
       />
-      <h2 className="absolute bottom-8 left-4 text-white text-lg font-bold z-20">
-        {item.title}
-      </h2>
-      <p className="absolute bottom-4 left-4 text-white text-sm z-20">
-        {item.description}
-      </p>
-      <div className="absolute inset-0 h-full w-full bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded-xl pointer-events-none" />
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/75 via-black/15 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-0.5 p-5">
+        <h3 className="text-lg font-semibold tracking-[-0.01em] text-white">
+          {item.title}
+        </h3>
+        <p className="text-sm text-white/75">
+          {item.description}
+        </p>
+      </div>
     </motion.div>
   );
 };

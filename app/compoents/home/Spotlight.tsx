@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
-import { Check, Copy } from "lucide-react";
+import { Copy, SlidersHorizontal, Sparkles } from "lucide-react";
 import { catalogBySlug } from "./catalog";
 import SegmentedTabs from "../ui/SegmentedTabs";
+import { SwapIcon, useCopy, useTweakedProps } from "./ShowcaseCard";
+import { aiPrompt, setActiveTweak, TweakBridge } from "./tweak";
 
 const tabs = [
   { slug: "gooey-search", label: "Gooey search", hint: "Click the icon", scale: 1.3 },
@@ -18,20 +20,20 @@ const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
 export default function Spotlight() {
   const [active, setActive] = useState(0);
-  const [copied, setCopied] = useState(false);
+  const [replayKey, setReplayKey] = useState(0);
   const reduceMotion = useReducedMotion();
+  const { copied, copy } = useCopy();
 
   const tab = tabs[active];
   const item = catalogBySlug[tab.slug];
+  const tweakId = `spotlight:${item.slug}`;
+  const { tweaking, onProps, props, changed } = useTweakedProps(item, tweakId);
+  const replay = useCallback(() => setReplayKey((k) => k + 1), []);
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(item.code);
-    } catch {
-      return;
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
+  const switchTab = (i: number) => {
+    // Keep tweaking across tabs: hand the panel to the newly selected component.
+    if (tweaking) setActiveTweak(`spotlight:${tabs[i].slug}`);
+    setActive(i);
   };
 
   return (
@@ -39,7 +41,8 @@ export default function Spotlight() {
       <div className="mk-section-head">
         <h2 className="mk-h2">Interactions worth playing with</h2>
         <p className="mk-lead">
-          Springs you can interrupt, filters that melt, cards that lean. Pick one and poke at it.
+          Springs you can interrupt, filters that melt, cards that lean. Pick one, poke at it, then
+          tune it live.
         </p>
       </div>
 
@@ -47,10 +50,13 @@ export default function Spotlight() {
         label="Featured components"
         items={tabs.map((t, i) => ({ value: String(i), label: t.label }))}
         value={String(active)}
-        onChange={(v) => setActive(Number(v))}
+        onChange={(v) => switchTab(Number(v))}
       />
 
-      <div className="mk-stage" role="tabpanel" aria-label={item.title}>
+      <div className="mk-stage" role="tabpanel" aria-label={item.title} data-tweaking={tweaking}>
+        {tweaking && item.tweak && (
+          <TweakBridge key={item.slug} id={tweakId} item={item} onProps={onProps} onReplay={replay} />
+        )}
         <LayoutGroup id="spotlight">
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
@@ -61,8 +67,8 @@ export default function Spotlight() {
               exit={{ opacity: 0, filter: "blur(6px)", transition: { duration: 0.15 } }}
               transition={{ duration: 0.3, ease: EASE_OUT }}
             >
-              <div className="mk-card-stage" style={{ transform: `scale(${tab.scale})` }}>
-                {item.render(0)}
+              <div key={replayKey} className="mk-card-stage" style={{ transform: `scale(${tab.scale})` }}>
+                {item.render(props)}
               </div>
             </motion.div>
           </AnimatePresence>
@@ -73,13 +79,36 @@ export default function Spotlight() {
             <p className="mk-stage-title">{item.title}</p>
             <p className="mk-stage-hint">{tab.hint}</p>
           </div>
-          <button type="button" className="mk-btn mk-btn-ghost mk-btn-sm" onClick={copy}>
-            <span className="mk-swap" data-state={copied ? "b" : "a"}>
-              <Copy size={14} className="mk-swap-a" />
-              <Check size={14} className="mk-swap-b" />
-            </span>
-            {copied ? "Copied" : "Copy code"}
-          </button>
+          <div className="mk-stage-actions">
+            {item.tweak && (
+              <button
+                type="button"
+                className="mk-btn mk-btn-ghost mk-btn-sm"
+                data-active={tweaking}
+                aria-pressed={tweaking}
+                onClick={() => setActiveTweak(tweaking ? null : tweakId)}
+              >
+                <SlidersHorizontal size={14} />
+                {tweaking ? "Done" : "Tweak"}
+              </button>
+            )}
+            <button
+              type="button"
+              className="mk-btn mk-btn-ghost mk-btn-sm"
+              onClick={() => copy("prompt", aiPrompt(item, props, changed))}
+            >
+              <SwapIcon on={copied === "prompt"} icon={<Sparkles size={14} />} />
+              <span className="mk-hide-sm">{copied === "prompt" ? "Copied" : "Copy AI prompt"}</span>
+            </button>
+            <button
+              type="button"
+              className="mk-btn mk-btn-ghost mk-btn-sm"
+              onClick={() => copy("code", item.code)}
+            >
+              <SwapIcon on={copied === "code"} icon={<Copy size={14} />} />
+              <span className="mk-hide-sm">{copied === "code" ? "Copied" : "Copy code"}</span>
+            </button>
+          </div>
         </div>
       </div>
     </section>

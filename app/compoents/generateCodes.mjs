@@ -18,6 +18,9 @@ const filesToRead = [
   'AnimatePresenceModes.tsx',
   'StackedCards.tsx',
   'apple-accordion/AppleAccordion.tsx',
+  'PlayPauseMorph.tsx',
+  'GooeyDropdown.tsx',
+  'Name.tsx',
 ];
 
 const variables = [
@@ -37,12 +40,16 @@ const variables = [
   'animatePresenceModesCode',
   'stackedCardsCode',
   'appleAccordionCode',
+  'playPauseMorphCode',
+  'gooeyDropdownCode',
+  'nameCode',
 ];
 
 let output = '// Auto-generated: source code strings for component copy-to-clipboard\n\n';
 
 for (let i = 0; i < filesToRead.length; i++) {
-  const filePath = path.join(process.cwd(), filesToRead[i]);
+  // Resolve next to this script so it works from any working directory.
+  const filePath = path.join(path.dirname(new URL(import.meta.url).pathname), filesToRead[i]);
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     // We use JSON.stringify to safely escape everything, including backticks, newlines, and quotes
@@ -52,5 +59,5 @@ for (let i = 0; i < filesToRead.length; i++) {
   }
 }
 
-fs.writeFileSync('componentCodes.ts', output);
+fs.writeFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), 'componentCodes.ts'), output);
 console.log('Successfully generated componentCodes.ts');
