@@ -177,7 +177,7 @@ const faqs = [
   },
   {
     q: "Does it support dark mode?",
-    a: "Yes. Use the moon icon in the dock at the bottom of the page to switch themes; every demo is tuned for both.",
+    a: "Yes. Use the moon icon in the header to switch themes; every demo is tuned for both.",
   },
 ];
 

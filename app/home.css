@@ -31,7 +31,7 @@
   color: var(--mk-text);
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   overflow-x: clip;
-  padding-bottom: 140px; /* room for the floating dock */
+  padding-bottom: 40px;
 }
 
 .dark .mk-root {
@@ -665,6 +665,15 @@
 
 .mk-swap-b {
   color: #22a35a;
+}
+
+.mk-theme-btn {
+  width: 32px;
+  height: 32px;
+}
+
+.mk-theme-btn .mk-sun {
+  color: inherit;
 }
 
 .mk-card-body {

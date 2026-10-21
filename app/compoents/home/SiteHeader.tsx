@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AnimatedHeroLogo from "../AnimatedHeroLogo";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "../theme";
 import { GithubIcon } from "./icons";
 
 const links = [
@@ -14,6 +16,7 @@ const links = [
 
 export default function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
+  const { theme, toggle } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -41,6 +44,18 @@ export default function SiteHeader() {
         </nav>
 
         <div className="mk-header-actions">
+          <button
+            type="button"
+            className="mk-icon-btn mk-theme-btn"
+            onClick={toggle}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title="Toggle theme"
+          >
+            <span className="mk-swap" data-state={theme === "dark" ? "b" : "a"}>
+              <Moon size={15} className="mk-swap-a" />
+              <Sun size={15} className="mk-swap-b mk-sun" />
+            </span>
+          </button>
           <a
             href="https://github.com/NamanSharma2112/MotionKit"
             target="_blank"
