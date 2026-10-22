@@ -1,12 +1,46 @@
 /* Isometric maker — page-specific bits on top of the shared mk-* primitives. */
 
+/* Wider page and a canvas that dominates it. */
+.mk-page.iso-page {
+  max-width: 1680px;
+}
+
+.iso-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 312px;
+  gap: 16px;
+  align-items: start;
+}
+
+.iso-workspace[data-panel="closed"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.iso-side[hidden] {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .iso-workspace,
+  .iso-workspace[data-panel="closed"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .iso-side[hidden] {
+    display: flex;
+  }
+  .iso-panel-toggle {
+    display: none;
+  }
+}
+
 .iso-stage {
-  --iso-ground-top: #ececef;
-  --iso-ground-left: #dcdce1;
-  --iso-ground-right: #c9c9cf;
-  --iso-grid: rgba(0, 0, 0, 0.13);
-  --iso-cell-hover: rgba(31, 107, 255, 0.1);
-  height: clamp(440px, 68vh, 700px);
+  --iso-ground-top: #ebebee;
+  --iso-ground-left: #dcdce0;
+  --iso-ground-right: #cbcbd0;
+  --iso-grid: rgba(0, 0, 0, 0.09);
+  --iso-level-fill: rgba(31, 107, 255, 0.05);
+  --iso-level-grid: rgba(31, 107, 255, 0.28);
+  height: max(480px, min(78vh, 820px));
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
@@ -14,11 +48,12 @@
 }
 
 .dark .iso-stage {
-  --iso-ground-top: #26262b;
-  --iso-ground-left: #1e1e22;
-  --iso-ground-right: #18181b;
-  --iso-grid: rgba(255, 255, 255, 0.1);
-  --iso-cell-hover: rgba(59, 125, 255, 0.16);
+  --iso-ground-top: #29292e;
+  --iso-ground-left: #212125;
+  --iso-ground-right: #19191c;
+  --iso-grid: rgba(255, 255, 255, 0.07);
+  --iso-level-fill: rgba(59, 125, 255, 0.07);
+  --iso-level-grid: rgba(59, 125, 255, 0.36);
 }
 
 .iso-stage[data-pan="true"] {
@@ -27,7 +62,7 @@
 
 @media (max-width: 640px) {
   .iso-stage {
-    height: 380px;
+    height: max(420px, 66vh);
   }
 }
 
@@ -37,6 +72,14 @@
   width: 100%;
   height: 100%;
   shape-rendering: geometricPrecision;
+}
+
+/* Every face is outlined in its own colour, a hair wide at any zoom, so
+   neighbouring faces overlap instead of leaving anti-aliased seams. */
+.iso-face {
+  stroke-width: 0.75;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
 }
 
 .iso-cell {
@@ -50,8 +93,9 @@
   stroke: transparent;
 }
 
-.iso-cell[data-hover="true"] {
-  fill: var(--iso-cell-hover);
+.iso-stage[data-level="true"] .iso-cell {
+  fill: var(--iso-level-fill);
+  stroke: var(--iso-level-grid);
 }
 
 .iso-block {
@@ -61,6 +105,23 @@
 /* Erase preview */
 .iso-block[data-state="erase"] {
   opacity: 0.32;
+}
+
+/* Blocks above the edit level: a faint silhouette, not clickable. */
+.iso-block[data-state="above"] {
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+/* Selected blocks: an accent wash and outline on their own faces. */
+.iso-sel {
+  fill: var(--mk-accent);
+  fill-opacity: 0.22;
+  stroke: var(--mk-accent);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
 }
 
 /* New block: short drop into place. Pointer placements only. */
@@ -87,17 +148,38 @@
   }
 }
 
+/* Placement preview: the block at half strength over a solid footprint. */
 .iso-ghost {
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .iso-ghost-outline {
+  fill: var(--mk-accent);
+  fill-opacity: 0.12;
+  stroke: var(--mk-accent);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.iso-mirror {
   fill: none;
   stroke: var(--mk-accent);
-  stroke-width: 1.5;
-  stroke-dasharray: 4 3;
+  stroke-width: 1.25;
+  stroke-dasharray: 5 5;
   vector-effect: non-scaling-stroke;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.iso-marquee {
+  position: absolute;
+  z-index: 1;
+  border: 1px solid var(--mk-accent);
+  border-radius: 3px;
+  background: var(--mk-accent-soft);
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -117,6 +199,113 @@
   display: flex;
   gap: 6px;
   pointer-events: none;
+}
+
+.iso-note {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* Bottom overlays: tool options on the left, edit level on the right. */
+.iso-overlay {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  max-width: calc(100% - 24px);
+  transition: opacity 150ms ease;
+}
+
+.iso-overlay[data-hidden="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.iso-bar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 34px;
+  padding: 3px 4px 3px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--mk-muted);
+  background: color-mix(in srgb, var(--mk-surface) 90%, transparent);
+  border: 1px solid var(--mk-border);
+  backdrop-filter: blur(8px);
+}
+
+.iso-bar-label {
+  padding-right: 6px;
+}
+
+.iso-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--mk-text);
+  transition:
+    background-color 120ms ease,
+    transform 160ms var(--ease-out);
+}
+
+button.iso-bar-btn:active {
+  transform: scale(0.97);
+}
+
+.iso-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.iso-stepper-value {
+  min-width: 64px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.iso-mini {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  color: var(--mk-text);
+  transition:
+    background-color 120ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.iso-mini:active {
+  transform: scale(0.94);
+}
+
+.iso-mini:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .iso-bar-btn:hover,
+  .iso-mini:hover {
+    background: var(--mk-surface-2);
+  }
+}
+
+.iso-bar-btn:focus-visible,
+.iso-mini:focus-visible {
+  outline: 2px solid var(--mk-accent);
+  outline-offset: 1px;
 }
 
 .iso-empty {
@@ -196,16 +385,33 @@
 }
 
 /* Example tiles */
+.mk-option.iso-example {
+  gap: 6px;
+  padding: 5px 5px 8px;
+}
+
 .iso-thumb {
   display: block;
-  height: 84px;
+  height: 64px;
   border-radius: 10px;
   background-color: var(--mk-surface-2);
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
   background-origin: content-box;
-  padding: 8px;
+  padding: 6px;
+}
+
+.mk-chip.iso-chip {
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.mk-swatch.iso-swatch-sm {
+  width: 20px;
+  height: 20px;
 }
 
 /* Colour picker swatch that wraps a native colour input */
@@ -255,13 +461,6 @@
 .iso-danger[data-confirm="true"] {
   color: #fff;
   background: #e5484d;
-}
-
-@media (min-width: 1025px) {
-  .iso-sticky {
-    position: sticky;
-    top: 76px;
-  }
 }
 
 .iso-hint {

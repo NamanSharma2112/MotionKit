@@ -107,8 +107,8 @@ function city(): Scene {
   for (let z = 0.5; z < 3.5; z++) s.fill(9, 10, 1, 3, z, "#f4a3a3");
   s.fill(9, 10, 1, 3, 3.5, "#e9887f", "slab");
   // low building with rooftop tank
-  for (let z = 0.5; z < 2.5; z++) s.fill(7, 10, 7, 10, z, "#c6b6f3");
-  s.fill(8, 9, 8, 9, 2.5, "#b4a0ee");
+  for (let z = 0.5; z < 2.5; z++) s.fill(7, 10, 7, 10, z, "#a8dccd");
+  s.fill(8, 9, 8, 9, 2.5, "#8ccdbb");
   s.add(8, 8, 3.5, "#9aa3b5", "cylinder");
   // cars
   s.add(5, 2, 0.5, "#e5484d", "slab").add(6, 9, 0.5, "#3b82f6", "slab").add(9, 5, 0.5, "#ffd23f", "slab");
