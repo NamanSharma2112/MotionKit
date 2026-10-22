@@ -200,7 +200,7 @@ export default function CSSPlaygroundPage() {
             </p>
           )}
 
-          <div className="mk-canvas grid h-[clamp(320px,calc(100vh-470px),460px)] place-items-center max-sm:h-[360px]">
+          <div className="mk-canvas grid h-[clamp(360px,calc(100svh-300px),680px)] place-items-center max-sm:h-[360px]">
             <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5">
               <span className="mk-badge">
                 {Math.round(props.width)}×{Math.round(props.height)}
@@ -243,7 +243,7 @@ export default function CSSPlaygroundPage() {
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
-            <pre className="mk-code max-h-[260px]">{css}</pre>
+            <pre tabIndex={0} className="mk-code max-h-[260px]">{css}</pre>
           </div>
         </div>
 

@@ -642,7 +642,7 @@ export default function AsciiAnimatorPage() {
   const fontPx = info.cellH ? Math.max(1, Math.round(info.cellH * base.fontScale)) : 0;
 
   return (
-    <div className="mk-page">
+    <main className="mk-page">
       <PageHeader
         title="ASCII animator"
         description="Turn an image, a built-in example or your camera into animated text art, then export it."
@@ -923,7 +923,7 @@ export default function AsciiAnimatorPage() {
                     onClick={() => update({ charSet: k })}
                   >
                     {CHARSET_LABELS[k]}
-                    <span className="font-mono text-[11px] opacity-60" aria-hidden>
+                    <span className="font-mono text-[11px]" aria-hidden>
                       {CHAR_SETS[k].filter((c) => c.trim() && c !== "⠀").slice(0, 3).join("")}
                     </span>
                   </button>
@@ -1022,6 +1022,6 @@ export default function AsciiAnimatorPage() {
       </div>
 
       <MorePlaygrounds current="/ascii" />
-    </div>
+    </main>
   );
 }

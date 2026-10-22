@@ -106,7 +106,7 @@ function PresetTile({ preset, active, onPick }: { preset: Preset; active: boolea
   const surface = !preset.surface || preset.surface === "auto" ? "var(--sh-el, var(--mk-surface))" : preset.surface;
   return (
     <button type="button" className="mk-option" data-active={active} onClick={onPick}>
-      <span className="grid h-[60px] place-items-center rounded-[10px]" style={{ background: bg }}>
+      <span className="sh-light-stage grid h-[60px] place-items-center rounded-[10px]" style={{ background: bg }}>
         <span
           className="h-7 w-11"
           style={{
@@ -334,7 +334,7 @@ export default function ShadowPage() {
 
           <div
             ref={canvasRef}
-            className="mk-canvas grid [--sh-el:var(--mk-surface)] dark:[--sh-el:#26262b] h-[clamp(300px,calc(100vh-480px),440px)] place-items-center max-sm:h-[340px]"
+            className="mk-canvas sh-light-stage grid [--sh-el:var(--mk-surface)] h-[clamp(360px,calc(100svh-300px),680px)] place-items-center max-sm:h-[340px]"
             style={canvasBg}
           >
             <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5">

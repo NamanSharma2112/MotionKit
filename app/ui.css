@@ -573,7 +573,16 @@
 }
 
 .mk-tok-kw {
-  color: #d6409f;
+  color: #b8247a;
+}
+
+:root.dark .mk-tok-kw,
+:root.dark .mk-art-css span {
+  color: #f472b6;
+}
+
+:root.dark .mk-tok-str {
+  color: #b9a2ff;
 }
 
 .mk-tok-name {
@@ -581,7 +590,7 @@
 }
 
 .mk-tok-str {
-  color: #8b5cf6;
+  color: #6d3fdc;
 }
 
 /* ── Component grid ─────────────────────────── */
@@ -1094,7 +1103,7 @@
 }
 
 .mk-art-css span {
-  color: #d6409f;
+  color: #b8247a;
 }
 
 .mk-art-css b {
@@ -1618,7 +1627,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 12vh 16px 16px;
+  padding: clamp(16px, 12vh, 120px) 16px 16px;
   background: rgba(10, 10, 12, 0.35);
   backdrop-filter: blur(2px);
 }
@@ -1638,6 +1647,7 @@
 
 .mk-palette-input {
   display: flex;
+  flex-shrink: 0; /* never squashed by a long result list */
   align-items: center;
   gap: 10px;
   padding: 0 16px;
@@ -1656,6 +1666,8 @@
 }
 
 .mk-palette-list {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 6px;
   scroll-padding: 34px 0 6px;
@@ -1947,7 +1959,7 @@
 .mk-range {
   --p: 50%;
   width: 100%;
-  height: 18px;
+  height: 22px; /* generous hit area around the 4px track */
   margin: 0;
   background: transparent;
   cursor: pointer;
@@ -2735,4 +2747,49 @@ html .dialkit-panel[data-position="top-right"] {
     animation: none;
     opacity: 0.8;
   }
+}
+
+/* Tool pages: use the width, and keep the side panel beside the canvas.
+   On desktop the panel sticks under the header and scrolls on its own, so a
+   long panel no longer leaves a blank strip under a short canvas. */
+.mk-page:has(.mk-workspace) {
+  max-width: 1680px;
+}
+
+@media (min-width: 1025px) {
+  .mk-workspace > .mk-stack-col:last-child,
+  .iso-workspace > .iso-side {
+    position: sticky;
+    top: 80px;
+    max-height: calc(100svh - 96px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    /* Room for panel borders and focus rings inside the scroller. */
+    padding: 2px 4px 2px 2px;
+    margin: -2px -4px -2px -2px;
+  }
+}
+
+/* White on the brighter dark-theme accent falls under 4.5:1; filled buttons keep the deeper blue. */
+:root.dark .mk-btn-primary {
+  background: #1f6bff;
+}
+
+:root.dark .mk-btn-primary:hover:not(:disabled) {
+  background: #1a5fe6;
+}
+
+/* Shadow studio: dark shadows vanish on a dark stage, so edits looked like they
+   did nothing. The stage stays a light surface in both themes. */
+:root.dark .sh-light-stage {
+  color-scheme: light;
+  --mk-surface: #ffffff;
+  --mk-surface-2: #f1f1f3;
+  --mk-surface-3: #e7e7ea;
+  --mk-border: rgba(0, 0, 0, 0.08);
+  --mk-border-strong: rgba(0, 0, 0, 0.14);
+  --mk-text: #0b0b0c;
+  --mk-muted: #63636a;
+  --mk-faint: #75757b;
 }
