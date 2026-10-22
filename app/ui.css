@@ -742,8 +742,8 @@
 
 .mk-letter-swap {
   font-size: 2.6rem;
+  letter-spacing: -0.03em;
   color: var(--mk-text);
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 .mk-squiggly {
@@ -764,11 +764,10 @@
   width: 108px;
   height: 108px;
   border-radius: 16px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(135deg, #3b7dff, #8b5cf6);
-  box-shadow: 0 12px 30px -10px rgba(91, 100, 255, 0.6);
+  background: var(--mk-accent);
 }
 
 /* ── Spotlight ──────────────────────────────── */
