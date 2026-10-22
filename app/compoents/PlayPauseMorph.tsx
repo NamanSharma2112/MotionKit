@@ -37,7 +37,8 @@ export default function PlayPauseMorph({
     if (trigger && trigger > 0) setIsPlaying((prev) => !prev);
   }
 
-  const t = isPlaying ? PLAY : PAUSE;
+  // The icon shows the action the press will take: play while paused, pause while playing.
+  const t = isPlaying ? PAUSE : PLAY;
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -47,26 +48,25 @@ export default function PlayPauseMorph({
         aria-label="Play"
         aria-pressed={isPlaying}
         onClick={() => setIsPlaying((p) => !p)}
-        whileTap={{ scale: 0.95 }}
+        whileTap={{ scale: 0.97 }}
         transition={SPRING}
+        // Flat ink fill at rest; no shadow (only floating things get one).
         className="relative flex h-20 w-20 cursor-pointer items-center justify-center rounded-full border-0 bg-neutral-900 text-white outline-none
-          shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.16),0_8px_24px_-8px_rgba(0,0,0,0.35)]
-          transition-[box-shadow,background-color] duration-200 ease-out hover:bg-neutral-800
-          focus-visible:ring-2 focus-visible:ring-[#1f6bff]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white
-          dark:bg-white dark:text-neutral-900 dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_-8px_rgba(0,0,0,0.6)] dark:hover:bg-neutral-100
+          transition-colors duration-150 ease-out hover:bg-neutral-800
+          focus-visible:ring-2 focus-visible:ring-[#1f6bff]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white
+          dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200
           dark:focus-visible:ring-offset-neutral-900"
       >
-        {/* Pulse ring: one soft ripple per toggle (skipped for reduced motion) */}
-        {!reduceMotion && (
-          <motion.div
-            key={isPlaying ? "play-ring" : "pause-ring"}
-            aria-hidden
-            initial={{ scale: 1, opacity: 0.3 }}
-            animate={{ scale: 1.6, opacity: 0 }}
-            transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-            className="pointer-events-none absolute inset-0 rounded-full border border-neutral-900 dark:border-white"
-          />
-        )}
+        {/* Pulse ring: one soft ripple per toggle. Always rendered so server and client markup match;
+            reduced motion keeps the fade and drops the growth. */}
+        <motion.div
+          key={isPlaying ? "play-ring" : "pause-ring"}
+          aria-hidden
+          initial={{ scale: 1, opacity: 0.3 }}
+          animate={{ scale: reduceMotion ? 1 : 1.6, opacity: 0 }}
+          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+          className="pointer-events-none absolute inset-0 rounded-full border border-neutral-900 dark:border-white"
+        />
 
         <svg viewBox="0 0 24 24" width={30} height={30} aria-hidden>
           <motion.path
@@ -91,9 +91,14 @@ export default function PlayPauseMorph({
         key={isPlaying ? "playing" : "paused"}
         initial={{ opacity: 0, y: 6, filter: "blur(4px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        transition={{ duration: 0.3 }}
+        // Reduced motion: travel and blur settle instantly (while still invisible), only the fade plays.
+        transition={{
+          duration: 0.3,
+          ease: [0.23, 1, 0.32, 1],
+          ...(reduceMotion ? { y: { duration: 0 }, filter: { duration: 0 } } : {}),
+        }}
         aria-hidden
-        className="select-none text-[13px] font-medium text-neutral-500 dark:text-neutral-400"
+        className="select-none text-sm font-medium text-neutral-600 dark:text-neutral-400"
       >
         {isPlaying ? "Playing" : "Paused"}
       </motion.span>}

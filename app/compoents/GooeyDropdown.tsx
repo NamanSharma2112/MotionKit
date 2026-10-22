@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
-import { animate, useMotionValue, useMotionValueEvent } from "motion/react";
+import { animate, useMotionValue, useMotionValueEvent, useReducedMotion } from "motion/react";
 
 export type DropdownItem = {
   label: string;
@@ -70,6 +70,10 @@ const DEFAULT_ITEMS: DropdownItem[] = [
   },
 ];
 
+// Scale both layers to 0.97 while the trigger is held down.
+const PRESS =
+  "transition-transform duration-150 ease-out [[data-goo-root]:has([data-goo-trigger]:active)_&]:scale-[0.97]";
+
 const DEFAULT_SPRING: SpringConfig = {
   type: "spring",
   visualDuration: 0.3,
@@ -77,6 +81,13 @@ const DEFAULT_SPRING: SpringConfig = {
 };
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+// The goo filter plus a drop shadow that grows with the open progress: the closed
+// trigger sits flat, only the open menu floats.
+const blobFilter = (id: string, t: number) => {
+  const k = Math.min(Math.max(t, 0), 1);
+  return `url(#${id}) drop-shadow(0 8px 16px rgba(0,0,0,${(0.18 * k).toFixed(3)}))`;
+};
 
 function roundedRectShape(
   x: number,
@@ -114,7 +125,7 @@ export function GooDropdown({
   align = "end",
   gap = 14,
   itemHeight = 42,
-  buttonRadius = 12,
+  buttonRadius = BTN_H / 2,
   panelRadius = 22,
   fill = FILL,
   gooStrength = 8,
@@ -124,7 +135,9 @@ export function GooDropdown({
   const [open, setOpen] = useState(false);
   const filterId = useId().replace(/[:]/g, "");
 
+  const reduceMotion = useReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
+  const blobRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -156,12 +169,14 @@ export function GooDropdown({
     const shape = shapeAt(v);
     if (panelRef.current) panelRef.current.style.clipPath = shape;
     if (contentRef.current) contentRef.current.style.clipPath = shape;
+    if (blobRef.current) blobRef.current.style.filter = blobFilter(filterId, v);
   });
 
   useEffect(() => {
-    const animation = animate(progress, open ? 1 : 0, spring);
+    // Reduced motion: the menu appears in place instead of morphing out of the trigger.
+    const animation = animate(progress, open ? 1 : 0, reduceMotion ? { duration: 0 } : spring);
     return () => animation.stop();
-  }, [open, progress, spring]);
+  }, [open, progress, spring, reduceMotion]);
 
   useEffect(() => {
     if (!open) return;
@@ -181,6 +196,9 @@ export function GooDropdown({
     };
   }, [open]);
 
+  // Press feedback scales the blob and the content together around the trigger's centre.
+  const origin = `${geo.btnX + BTN_W / 2}px ${BTN_H / 2}px`;
+
   // The default fill lifts a little in dark mode so the blob stays visible on dark surfaces.
   const blobFill = fill === FILL ? "var(--goo-fill)" : fill;
 
@@ -192,6 +210,7 @@ export function GooDropdown({
   return (
     <div
       ref={rootRef}
+      data-goo-root
       className={`relative select-none [--goo-fill:#1c1c1e] dark:[--goo-fill:#2c2c31] ${className ?? ""}`}
       style={{ width, height: geo.layerH }}
     >
@@ -213,10 +232,9 @@ export function GooDropdown({
 
       {/* Goo blob layer */}
       <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          filter: `url(#${filterId}) drop-shadow(0 1px 1px rgba(0,0,0,0.12)) drop-shadow(0 8px 16px rgba(0,0,0,0.16))`,
-        }}
+        ref={blobRef}
+        className={`pointer-events-none absolute inset-0 ${PRESS}`}
+        style={{ filter: blobFilter(filterId, progress.get()), transformOrigin: origin }}
       >
         {/* Trigger pill */}
         <div
@@ -238,14 +256,15 @@ export function GooDropdown({
       </div>
 
       {/* Crisp content layer */}
-      <div className="absolute inset-0">
+      <div className={`absolute inset-0 ${PRESS}`} style={{ transformOrigin: origin }}>
         {/* Trigger button */}
         <button
           type="button"
+          data-goo-trigger
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-haspopup="menu"
-          className="absolute top-0 flex items-center justify-center gap-1.5 text-[13px] font-semibold text-white/90 outline-none transition-[color,opacity] duration-150 hover:text-white focus-visible:ring-2 focus-visible:ring-[#1f6bff]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white active:opacity-70 dark:focus-visible:ring-offset-neutral-900"
+          className="absolute top-0 flex cursor-pointer items-center justify-center gap-1.5 text-[13px] font-semibold text-white/90 outline-none transition-colors duration-150 hover:text-white focus-visible:ring-2 focus-visible:ring-[#1f6bff]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-900"
           style={{
             left: geo.btnX,
             width: BTN_W,
@@ -269,6 +288,7 @@ export function GooDropdown({
         <div
           ref={contentRef}
           role="menu"
+          aria-hidden={!open}
           className="absolute inset-0"
           style={{
             clipPath: closedShape,

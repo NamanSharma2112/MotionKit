@@ -118,16 +118,19 @@ export default function LetterSwap({
               y: -rise,
             }}
             transition={{
-              layout: spring ? { type: "spring", ...spring } : {
+              // Reduced motion: letters fade in place instead of gliding across.
+              layout: reduceMotion ? { duration: 0 } : spring ? { type: "spring", ...spring } : {
                 type: "spring",
                 stiffness,
                 damping,
               },
               opacity: {
                 duration: 0.18,
+                ease: [0.23, 1, 0.32, 1],
               },
               y: {
                 duration: 0.22,
+                ease: [0.23, 1, 0.32, 1],
               },
             }}
           >

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion, Variants } from "framer-motion";
 
 const TITLES = ["Component Library", "Animation Guide", "Design System", "Motion Kit"];
 
@@ -30,6 +30,9 @@ export default function StaggeredList({
   const items = titles.map((title, i) => ({ id: i + 1, title }));
   const [show, setShow] = useState(true);
   const [prevTrigger, setPrevTrigger] = useState(trigger);
+  // Reduced motion: rows still fade in one after another, without travel or blur.
+  const reduceMotion = useReducedMotion();
+  const travel = reduceMotion ? 0 : distance;
 
   // Replay: unmount the list for a beat, then bring it back in.
   if (trigger !== prevTrigger) {
@@ -57,8 +60,8 @@ export default function StaggeredList({
   const item: Variants = {
     hidden: {
       opacity: 0,
-      y: direction === "up" ? distance : -distance,
-      filter: `blur(${blur}px)`,
+      y: direction === "up" ? travel : -travel,
+      filter: `blur(${reduceMotion ? 0 : blur}px)`,
     },
     show: {
       opacity: 1,
@@ -82,13 +85,13 @@ export default function StaggeredList({
               <motion.li
                 key={i.id}
                 variants={item}
-                className="group flex h-12 cursor-default items-center gap-3 rounded-xl border border-black/[0.07] bg-white px-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_6px_-2px_rgba(0,0,0,0.04)] dark:border-white/10 dark:bg-neutral-900 dark:shadow-none"
+                className="group flex h-12 cursor-default items-center gap-3 rounded-xl bg-black/[0.04] px-4 transition-colors duration-150 ease-out hover:bg-black/[0.07] dark:bg-white/[0.06] dark:hover:bg-white/[0.09]"
               >
                 <span
                   aria-hidden
-                  className="size-1.5 shrink-0 rounded-full bg-neutral-300 transition-colors duration-150 group-hover:bg-[#1f6bff] dark:bg-neutral-600"
+                  className="size-1.5 shrink-0 rounded-full bg-neutral-400 transition-colors duration-150 group-hover:bg-[#1f6bff] dark:bg-neutral-500"
                 />
-                <span className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                <span className="truncate text-sm font-medium text-neutral-900 dark:text-white">
                   {i.title}
                 </span>
                 <svg
@@ -101,7 +104,7 @@ export default function StaggeredList({
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="ml-auto shrink-0 -translate-x-1 text-neutral-400 opacity-0 transition-[opacity,transform] duration-150 ease-out group-hover:translate-x-0 group-hover:opacity-100 dark:text-neutral-500"
+                  className="ml-auto shrink-0 -translate-x-1 text-neutral-500 opacity-0 transition-[opacity,transform] duration-150 ease-out group-hover:translate-x-0 group-hover:opacity-100 dark:text-neutral-400"
                 >
                   <path d="M5 12h14" />
                   <path d="m12 5 7 7-7 7" />

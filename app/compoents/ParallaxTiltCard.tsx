@@ -10,7 +10,7 @@ export default function ParallaxTiltCard({
   trigger,
   maxTilt = 17.5,
   glare = true,
-  title = "3D PARALLAX",
+  title = "3D parallax",
   description = "Tilt your device or move your mouse to explore the depth.",
   spring = { stiffness: 100, damping: 10, mass: 1 },
 }: {
@@ -70,20 +70,21 @@ export default function ParallaxTiltCard({
           rotateX,
           transformStyle: "preserve-3d",
         }}
-        className="relative aspect-square overflow-hidden rounded-[20px] border border-black/[0.07] bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_32px_-12px_rgba(0,0,0,0.18)] [--glare:rgba(255,255,255,0.5)] dark:border-white/10 dark:bg-neutral-900 dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_12px_32px_-12px_rgba(0,0,0,0.6)] dark:[--glare:rgba(255,255,255,0.06)]"
+        className="group relative aspect-square rounded-2xl bg-white p-8 transition-shadow duration-200 ease-out [--glare:rgba(255,255,255,0.5)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.04),0_16px_32px_-12px_rgba(0,0,0,0.16)] dark:bg-neutral-800 dark:[--glare:rgba(255,255,255,0.06)] dark:hover:shadow-[0_2px_4px_rgba(0,0,0,0.3),0_16px_32px_-12px_rgba(0,0,0,0.6)]"
       >
         <div
           style={{ transform: "translateZ(20px)" }}
           className="flex h-full flex-col items-center justify-center text-center"
         >
-          <div className="mb-5 flex size-14 items-center justify-center rounded-2xl border border-black/[0.06] bg-neutral-50 dark:border-white/10 dark:bg-neutral-800">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="text-neutral-900 dark:text-white"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+          <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-black/[0.04] dark:bg-white/[0.06]">
+            {/* Three axes: the card moves in depth */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="text-neutral-900 dark:text-white"><path d="M5 3v16h16"/><path d="m5 19 6-6"/><path d="m2 6 3-3 3 3"/><path d="m18 16 3 3-3 3"/></svg>
           </div>
-          <h4 className="mb-1.5 text-xl font-semibold tracking-[-0.01em] text-neutral-900 dark:text-white">{title}</h4>
+          <h4 className="mb-1.5 text-xl font-semibold tracking-[-0.02em] text-neutral-900 text-balance dark:text-white">{title}</h4>
           <p className="text-sm leading-relaxed text-neutral-500 text-balance dark:text-neutral-400">{description}</p>
         </div>
 
-        {/* Glare effect */}
+        {/* Glare: only while the pointer is over the card, so it never washes out the text at rest */}
         {glare && (
           <motion.div
             aria-hidden
@@ -91,7 +92,7 @@ export default function ParallaxTiltCard({
               transform: "translateZ(1px)",
               background: glareBackground,
             }}
-            className="pointer-events-none absolute inset-0 rounded-[20px]"
+            className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100"
           />
         )}
       </motion.div>

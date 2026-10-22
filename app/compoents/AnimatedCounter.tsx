@@ -8,7 +8,7 @@ export default function AnimatedCounter({
   duration = 2.5,
   target = 2500,
   ease = [0.22, 1, 0.36, 1],
-  label = "Projects Completed",
+  label = "Projects completed",
   suffix = "+",
 }: {
   trigger?: number;
@@ -67,9 +67,12 @@ export default function AnimatedCounter({
         >
           0
         </span>
-        <span className="ml-1 mt-1 text-3xl font-semibold leading-none text-[#1f6bff]">{suffix}</span>
+        {/* No empty suffix span, so the number stays optically centred. */}
+        {suffix && (
+          <span className="ml-1 mt-1 text-3xl font-semibold leading-none text-[#1f6bff]">{suffix}</span>
+        )}
       </div>
-      <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+      <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
         {label}
       </p>
     </div>

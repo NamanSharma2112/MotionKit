@@ -87,7 +87,8 @@ const BlurScramble = ({
         opacity: 1,
         y: 0
       }}
-      transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+      // Reduced motion: the rise settles instantly (while still invisible), the fade and focus remain.
+      transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1], ...(reduceMotion ? { y: { duration: 0 } } : {}) }}
       className="relative inline-block whitespace-pre"
     >
       <span className="sr-only">{text}</span>

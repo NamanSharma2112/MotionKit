@@ -30,6 +30,11 @@ const INITIAL_STACK = [
   },
 ];
 
+// Same shape at rest and in hand so the shadow interpolates cleanly.
+const REST_SHADOW = "0px 0px 0px -12px rgba(0,0,0,0)";
+const DRAG_SHADOW = "0px 18px 36px -12px rgba(0,0,0,0.35)";
+const SHADOW_EASE = { duration: 0.2, ease: [0.23, 1, 0.32, 1] as const };
+
 type Spring = { stiffness?: number; damping?: number; mass?: number; visualDuration?: number; bounce?: number };
 
 type StackSettings = {
@@ -54,8 +59,23 @@ const StackedCards = ({
   const [stack, setStack] = React.useState(INITIAL_STACK);
   const settings = { spring, swipeThreshold, offset, scaleStep, maxRotate };
 
+  const sendToBack = () => setStack((s) => [...s.slice(1), s[0]]);
+
   return (
-    <div className="relative flex h-96 w-80 items-center justify-center">
+    // Keyboard path for the drag: focus the stack and press an arrow key (or Enter) to send the top card back.
+    <div
+      tabIndex={0}
+      role="group"
+      aria-roledescription="card stack"
+      aria-label={`${stack[0].title}. Press an arrow key to see the next card.`}
+      onKeyDown={(e) => {
+        if (["ArrowLeft", "ArrowRight", "Enter", " "].includes(e.key)) {
+          e.preventDefault();
+          sendToBack();
+        }
+      }}
+      className="relative flex h-96 w-80 items-center justify-center rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-[#1f6bff]/60 focus-visible:ring-offset-4 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-900"
+    >
       {stack.map((item, index) => (
         <StackedCardItem
           key={item.title}
@@ -63,9 +83,7 @@ const StackedCards = ({
           index={index}
           total={stack.length}
           settings={settings}
-          onSendToBack={() => {
-            setStack((s) => [...s.slice(1), s[0]]);
-          }}
+          onSendToBack={sendToBack}
         />
       ))}
     </div>
@@ -114,9 +132,14 @@ const StackedCardItem: React.FC<StackedCardsProps> = ({
       animate={{
         y: `${-index * settings.offset}%`,
         scale: 1 - index * settings.scaleStep,
+        // Flat at rest; only the card in hand lifts (see whileDrag).
+        boxShadow: REST_SHADOW,
       }}
-      transition={STACK_SPRING}
-      className="absolute inset-0 cursor-grab overflow-hidden rounded-[20px] bg-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_32px_-12px_rgba(0,0,0,0.3)] ring-1 ring-black/[0.06] active:cursor-grabbing dark:bg-neutral-800 dark:ring-white/10"
+      whileDrag={{ boxShadow: DRAG_SHADOW }}
+      transition={{ ...STACK_SPRING, boxShadow: SHADOW_EASE }}
+      className={`absolute inset-0 overflow-hidden rounded-2xl bg-neutral-200 dark:bg-neutral-800 ${
+        isTop ? "cursor-grab active:cursor-grabbing" : ""
+      }`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
