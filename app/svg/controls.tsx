@@ -185,3 +185,100 @@ export function Dropzone({
     </label>
   );
 }
+
+const fmtNum = (n: number) => String(Math.round(n * 100) / 100);
+
+/* Compact numeric input for the inspector. Type and press Enter (or blur),
+   use ↑/↓ (Shift ×10), or drag the label sideways to scrub. `value: null`
+   shows "Mixed" for multi-selections with differing values. */
+export function NumberField({
+  label,
+  value,
+  onChange,
+  step = 1,
+  min,
+  max,
+  suffix,
+  disabled,
+  title,
+}: {
+  label: ReactNode;
+  value: number | null;
+  onChange: (v: number, scrubbing?: boolean) => void;
+  step?: number;
+  min?: number;
+  max?: number;
+  suffix?: string;
+  disabled?: boolean;
+  title?: string;
+}) {
+  const id = useId();
+  const [draft, setDraft] = useState<string | null>(null);
+  const scrub = useRef<{ x: number; start: number } | null>(null);
+  const clamp = (v: number) => Math.min(max ?? Infinity, Math.max(min ?? -Infinity, v));
+  const commitDraft = () => {
+    if (draft === null) return;
+    const v = parseFloat(draft);
+    setDraft(null);
+    if (Number.isFinite(v) && v !== value) onChange(clamp(v));
+  };
+  return (
+    <div className="mk-num" data-disabled={disabled || undefined} title={title}>
+      <label
+        htmlFor={id}
+        className="mk-num-label"
+        onPointerDown={(e) => {
+          if (disabled || value === null || e.button !== 0) return;
+          e.preventDefault();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          scrub.current = { x: e.clientX, start: value };
+        }}
+        onPointerMove={(e) => {
+          const s = scrub.current;
+          if (!s) return;
+          const steps = Math.round((e.clientX - s.x) / 2);
+          const v = clamp(Math.round((s.start + steps * step) / step) * step);
+          if (v !== value) onChange(v, true);
+        }}
+        onPointerUp={() => {
+          scrub.current = null;
+        }}
+        onPointerCancel={() => {
+          scrub.current = null;
+        }}
+      >
+        {label}
+      </label>
+      <input
+        id={id}
+        type="text"
+        inputMode="decimal"
+        className="mk-num-input"
+        disabled={disabled}
+        value={draft ?? (value === null ? "" : fmtNum(value))}
+        placeholder={value === null ? "Mixed" : undefined}
+        onFocus={(e) => {
+          setDraft(value === null ? "" : fmtNum(value));
+          e.currentTarget.select();
+        }}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commitDraft}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            commitDraft();
+            e.currentTarget.blur();
+          } else if (e.key === "Escape") {
+            setDraft(null);
+            e.currentTarget.blur();
+          } else if ((e.key === "ArrowUp" || e.key === "ArrowDown") && value !== null) {
+            e.preventDefault();
+            const v = clamp(value + (e.key === "ArrowUp" ? 1 : -1) * step * (e.shiftKey ? 10 : 1));
+            setDraft(fmtNum(v));
+            onChange(v, true);
+          }
+        }}
+      />
+      {suffix && <span className="mk-num-suffix">{suffix}</span>}
+    </div>
+  );
+}
