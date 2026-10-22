@@ -1,0 +1,337 @@
+/* SVG studio: page-specific layout and editor chrome. Tokens come from app/ui.css. */
+
+/* The studio is a work tool: give it a wider container than the 1280px default. */
+.mk-page.svg-page {
+  max-width: 1680px;
+}
+
+.svg-workspace {
+  --svg-stage-h: clamp(360px, 62svh, 560px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.svg-stage {
+  height: var(--svg-stage-h);
+  touch-action: none;
+}
+
+.svg-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (min-width: 641px) {
+  .svg-workspace {
+    --svg-stage-h: clamp(420px, 70svh, 760px);
+  }
+}
+
+/* Side panel from 960px; the stage fills most of the viewport below the
+   sticky header and toolbar. */
+@media (min-width: 960px) {
+  .svg-workspace {
+    --svg-stage-h: clamp(480px, calc(100svh - 150px), 820px);
+    grid-template-columns: minmax(0, 1fr) 316px;
+  }
+
+  .svg-workspace[data-solo="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The editor's panel column is as tall as toolbar + stage and scrolls on its own. */
+  .svg-workspace[data-toolbar] .svg-side {
+    max-height: calc(var(--svg-stage-h) + 58px);
+    overflow-y: auto;
+    border-radius: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--mk-border-strong) transparent;
+  }
+}
+
+/* Floating chrome inside the stage */
+.svg-hud {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--mk-surface) 92%, transparent);
+  border: 1px solid var(--mk-border);
+  box-shadow: var(--mk-shadow-sm);
+  backdrop-filter: blur(8px);
+}
+
+.svg-hud .mk-tool {
+  height: 28px;
+  min-width: 28px;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.svg-zoom-value {
+  min-width: 52px !important;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.svg-board-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  fill: var(--mk-muted);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.svg-size-label {
+  position: absolute;
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 18px;
+  color: #fff;
+  background: var(--mk-accent);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Compact numeric field (inspector) */
+.mk-num {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--mk-surface-2);
+  border: 1px solid var(--mk-border);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.mk-num:focus-within {
+  border-color: var(--mk-accent);
+  box-shadow: 0 0 0 3px var(--mk-accent-soft);
+}
+
+.mk-num[data-disabled] {
+  opacity: 0.5;
+}
+
+.mk-num-label {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 100%;
+  padding-left: 2px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--mk-faint);
+  cursor: ew-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+.mk-num-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 6px 0 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+  color: var(--mk-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.mk-num-input::placeholder {
+  color: var(--mk-faint);
+}
+
+.mk-num-suffix {
+  padding-right: 8px;
+  font-size: 11.5px;
+  color: var(--mk-faint);
+}
+
+@media (pointer: coarse) {
+  /* 16px stops iOS from zooming into the field. */
+  .mk-num-input {
+    font-size: 16px;
+  }
+}
+
+/* Small icon buttons in panel rows (align, layer actions) */
+.svg-icon-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.svg-icon-row .mk-tool {
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+  flex: 1;
+}
+
+/* Layers */
+.svg-layers {
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  margin: 0 -8px;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mk-border-strong) transparent;
+}
+
+.svg-layer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  flex: none;
+  padding: 0 4px 0 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--mk-text);
+  cursor: default;
+  transition: background-color 120ms ease;
+}
+
+.svg-layer:hover,
+.svg-layer[data-hover="true"] {
+  background: var(--mk-surface-2);
+}
+
+.svg-layer[data-selected="true"] {
+  background: var(--mk-accent-soft);
+}
+
+.svg-layer[data-hidden="true"] .svg-layer-name,
+.svg-layer[data-hidden="true"] .svg-layer-icon {
+  opacity: 0.45;
+}
+
+.svg-layer[data-drop="above"] {
+  box-shadow: inset 0 2px 0 var(--mk-accent);
+}
+
+.svg-layer[data-drop="below"] {
+  box-shadow: inset 0 -2px 0 var(--mk-accent);
+}
+
+.svg-layer[data-dragging="true"] {
+  opacity: 0.4;
+}
+
+.svg-layer-icon {
+  display: grid;
+  place-items: center;
+  color: var(--mk-muted);
+}
+
+.svg-layer-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.svg-layer-rename {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: var(--mk-text);
+  background: var(--mk-surface);
+  border: 1px solid var(--mk-accent);
+  outline: none;
+}
+
+.svg-layer-act {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  color: var(--mk-muted);
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease, background-color 120ms ease;
+}
+
+.svg-layer-act:hover {
+  color: var(--mk-text);
+  background: var(--mk-surface-3);
+}
+
+.svg-layer-act:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--mk-accent);
+  outline-offset: -2px;
+}
+
+.svg-layer:hover .svg-layer-act,
+.svg-layer[data-selected="true"] .svg-layer-act,
+.svg-layer-act[data-on="true"] {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .svg-layer-act {
+    opacity: 1;
+  }
+}
+
+/* Shortcut list inside the tip */
+.svg-shortcuts summary {
+  cursor: pointer;
+  color: var(--mk-text);
+  font-weight: 600;
+  list-style: none;
+}
+
+.svg-shortcuts summary::-webkit-details-marker {
+  display: none;
+}
+
+.svg-shortcuts dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 10px 0 0;
+}
+
+.svg-shortcuts dt {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--mk-text);
+  white-space: nowrap;
+}
+
+.svg-shortcuts dd {
+  margin: 0;
+}
+
+/* Handles: the hit area is larger than the drawn square for touch. */
+.svg-handle {
+  fill: var(--mk-surface);
+  stroke: var(--mk-accent);
+}
