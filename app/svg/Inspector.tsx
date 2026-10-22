@@ -382,14 +382,14 @@ export function ArtboardPanel({
             title={`${p.w} × ${p.h}`}
           >
             <span>{p.label}</span>
-            <span className="font-mono text-[10.5px] opacity-70">
+            <span className="font-mono text-[10.5px]">
               {p.w}×{p.h}
             </span>
           </button>
         ))}
         <span className="mk-chip h-auto! flex-col gap-0! px-1! py-1.5! pointer-events-none" data-active={!preset} aria-hidden={!!preset}>
           <span>Custom</span>
-          <span className="font-mono text-[10.5px] opacity-70">set W, H</span>
+          <span className="font-mono text-[10.5px]">set W, H</span>
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2">

@@ -46,7 +46,7 @@ export default function CodePanel<F extends string>({
           </button>
         </div>
       </div>
-      <pre className="mk-code max-h-[360px]">
+      <pre tabIndex={0} className="mk-code max-h-[360px]">
         <code>{code}</code>
       </pre>
     </section>

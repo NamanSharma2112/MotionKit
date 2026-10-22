@@ -12,13 +12,13 @@ export const metadata: Metadata = {
 
 export default function IsometricPage() {
   return (
-    <div className="mk-page iso-page">
+    <main className="mk-page iso-page">
       <PageHeader
         title="Isometric maker"
         description="Stack blocks on an isometric grid, start from an example, and export crisp SVG or PNG."
       />
       <EditorLoader />
       <MorePlaygrounds current="/isometric" />
-    </div>
+    </main>
   );
 }

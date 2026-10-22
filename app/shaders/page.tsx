@@ -557,7 +557,7 @@ export default function ShadersPage() {
             </div>
 
             {codeTab === "react" ? (
-              <pre className="mk-code sh-pre">
+              <pre tabIndex={0} className="mk-code sh-pre">
                 <code>{reactOut}</code>
               </pre>
             ) : mode === "custom" ? (
@@ -606,7 +606,7 @@ export default function ShadersPage() {
                 </p>
               </>
             ) : (
-              <pre className="mk-code sh-pre">
+              <pre tabIndex={0} className="mk-code sh-pre">
                 <code>{glslOut}</code>
               </pre>
             )}

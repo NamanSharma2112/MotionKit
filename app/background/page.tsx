@@ -153,7 +153,7 @@ export default function BackgroundPage() {
         </div>
         <CopyButton text={code} label={output === "css" ? "Copy CSS" : "Copy Tailwind"} />
       </div>
-      <pre className="mk-code max-h-[280px] whitespace-pre-wrap! [overflow-wrap:anywhere]">
+      <pre tabIndex={0} className="mk-code max-h-[280px] whitespace-pre-wrap! [overflow-wrap:anywhere]">
         <code>{code}</code>
       </pre>
     </section>
