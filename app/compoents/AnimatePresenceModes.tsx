@@ -1,6 +1,6 @@
 "use client"
 
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { useState } from "react"
 
 type Timing = { duration: number; enterScale: number; exitScale: number }
@@ -16,27 +16,29 @@ function ModeExample({
     state: boolean
     timing: Timing
 }) {
-    const defaultEase = [0.26, 0.02, 0.23, 0.94]
+    const reduceMotion = useReducedMotion()
+    // Strong ease-out: quick to respond, soft to settle.
+    const ease = [0.23, 1, 0.32, 1] as const
 
-    // Two clearly different items, legible on light and dark surfaces.
+    // Two clearly different items, legible on light and dark surfaces. Both sit flat:
+    // a hairline border on the neutral one, a plain accent fill on the other, no shadows.
     const dynamicClasses = state
-        ? "bg-white text-neutral-900 border-black/[0.08] shadow-[0_1px_2px_rgba(0,0,0,0.05),0_4px_12px_-4px_rgba(0,0,0,0.1)] dark:bg-neutral-800 dark:text-white dark:border-white/10 dark:shadow-none"
-        : "bg-[#1f6bff] text-white border-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_4px_12px_-4px_rgba(31,107,255,0.5)]"
+        ? "bg-white text-neutral-900 border-black/[0.08] dark:bg-neutral-800 dark:text-white dark:border-white/10"
+        : "bg-[#1f6bff] text-white border-transparent"
 
     const motionProps = {
         className: `absolute inset-0 flex items-center justify-center rounded-full border ${dynamicClasses}`,
         initial: { opacity: 0, scale: timing.enterScale },
-        animate: {
-            opacity: 1,
-            scale: 1,
-            ease: mode === "wait" ? [0.02, 0.35, 0.25, 0.99] : defaultEase,
+        animate: { opacity: 1, scale: 1 },
+        // Reduced motion keeps the crossfade and drops the scale: no shrink on exit, and the
+        // entering scale settles instantly while the item is still transparent.
+        exit: { opacity: 0, scale: reduceMotion ? 1 : timing.exitScale },
+        // The ease lives in the transition (inside the target it was animated as a value, not used as a curve).
+        transition: {
+            duration: timing.duration,
+            ease,
+            ...(reduceMotion ? { scale: { duration: 0 } } : {}),
         },
-        exit: {
-            opacity: 0,
-            scale: timing.exitScale,
-            ease: mode === "wait" ? [0.46, 0.04, 0.97, 0.44] : defaultEase,
-        },
-        transition: { duration: timing.duration },
     }
 
     return (
@@ -48,7 +50,7 @@ function ModeExample({
                     </motion.div>
                 </AnimatePresence>
             </div>
-            <code className="font-mono text-[13px] font-medium text-neutral-500 dark:text-neutral-400">
+            <code className="font-mono text-[13px] font-medium text-neutral-600 dark:text-neutral-400">
                 {mode}
             </code>
         </div>
@@ -89,7 +91,8 @@ export default function AnimatePresenceModes({
 
             <motion.button
                 type="button"
-                className="h-10 rounded-[10px] border border-black/[0.08] bg-white px-6 text-sm font-medium text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.05)] outline-none transition-colors duration-150 hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-[#1f6bff]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/10 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 dark:focus-visible:ring-offset-neutral-900"
+                // Flat pill in the ink colour, like the kit's other buttons.
+                className="h-10 cursor-pointer rounded-full bg-neutral-900 px-6 text-sm font-medium text-white outline-none transition-colors duration-150 ease-out hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-[#1f6bff]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200 dark:focus-visible:ring-offset-neutral-900"
                 onClick={switchItems}
                 whileTap={{ scale: 0.97 }}
             >

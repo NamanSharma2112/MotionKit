@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useId } from 'react'
-import { motion, LayoutGroup, SVGMotionProps } from "motion/react"
+import { motion, LayoutGroup, MotionConfig, SVGMotionProps } from "motion/react"
 
 type GooeyProps = {
   placeholder?: string
@@ -37,6 +37,8 @@ const Gooey = ({
   }
 
   return (
+    // Respect reduced motion: layout and transform travel is skipped, size and fades remain.
+    <MotionConfig reducedMotion="user">
     <LayoutGroup id={uid}>
       <SVGFilter id={filterId} blur={gooBlur} />
       <div style={{ filter: `url(#${filterId})` }} className='relative flex h-10 items-center justify-center'>
@@ -49,7 +51,10 @@ const Gooey = ({
         >
           <div
             onClick={() => setIsExpanded(true)}
-            className='flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-neutral-900 px-4 text-white dark:bg-white dark:text-neutral-900'
+            // Hover tint only while collapsed, so the pill never mismatches the search bubble.
+            className={`flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-neutral-900 px-4 text-white transition-colors duration-150 ease-out dark:bg-white dark:text-neutral-900 ${
+              isExpanded ? '' : 'hover:bg-neutral-800 dark:hover:bg-neutral-200'
+            }`}
           >
             {!isExpanded && <SearchIcon className="size-[22px] shrink-0" aria-hidden />}
 
@@ -69,7 +74,7 @@ const Gooey = ({
                 }
               }}
               placeholder={placeholder}
-              className='h-full w-full min-w-0 cursor-pointer bg-transparent text-sm font-medium text-white outline-none placeholder:text-white/55 focus:cursor-text dark:text-neutral-900 dark:placeholder:text-neutral-900/50'
+              className='h-full w-full min-w-0 cursor-pointer bg-transparent text-sm font-medium text-white outline-none placeholder:text-white/60 focus:cursor-text dark:text-neutral-900 dark:placeholder:text-neutral-900/60'
             />
           </div>
         </motion.div>
@@ -85,6 +90,7 @@ const Gooey = ({
         </motion.div>
       </div>
     </LayoutGroup>
+    </MotionConfig>
   )
 }
 

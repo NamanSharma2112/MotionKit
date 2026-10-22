@@ -187,8 +187,8 @@ export const catalog: CatalogItem[] = [
     tweak: {
       config: {
         maxLength: [12, 4, 40, 1],
-        placeholder: "Type here...",
-        warningColor: "#ff008c",
+        placeholder: "Type here…",
+        warningColor: "#e5484d",
         spring: { type: "spring", stiffness: 700, damping: 80 },
       },
       toProps: (v) => {
@@ -413,7 +413,7 @@ export const catalog: CatalogItem[] = [
       config: {
         maxTilt: [20, 0, 45, 0.5],
         glare: true,
-        title: "3D PARALLAX",
+        title: "3D parallax",
         description: "Tilt your device or move your mouse to explore the depth.",
         spring: { type: "spring", stiffness: 100, damping: 10, mass: 1 },
       },

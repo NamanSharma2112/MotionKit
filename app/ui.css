@@ -2649,3 +2649,90 @@ html .dialkit-panel[data-position="top-right"] {
     min-height: 40px;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   SKELETONS
+═══════════════════════════════════════════════ */
+
+.mk-skeleton {
+  display: block;
+  max-width: 100%;
+  background: var(--mk-surface-3);
+  animation: mk-skeleton-pulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes mk-skeleton-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
+  }
+}
+
+.mk-page-head .mk-skeleton,
+.mk-hero .mk-skeleton {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mk-skeleton-panel {
+  padding: 18px;
+  border-radius: 16px;
+  background: var(--mk-surface);
+  border: 1px solid var(--mk-border);
+}
+
+.mk-skeleton-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.mk-skeleton-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  max-width: 1280px;
+  margin: 24px auto 0;
+  padding: 0 24px;
+}
+
+@media (max-width: 760px) {
+  .mk-skeleton-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mk-skeleton-tiles > :nth-child(n + 3) {
+    display: none;
+  }
+}
+
+.mk-preview-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+}
+
+.mk-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-skeleton {
+    animation: none;
+    opacity: 0.8;
+  }
+}

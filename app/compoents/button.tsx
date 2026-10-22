@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 // --- Spinner Component ---
 const bars = Array(12).fill(0);
@@ -67,6 +67,9 @@ export default function SmoothButton({
 }) {
   const [buttonState, setButtonState] = useState<ButtonState>("idle");
   const [prevTrigger, setPrevTrigger] = useState(trigger);
+  // Reduced motion: labels cross-fade in place instead of sliding.
+  const reduceMotion = useReducedMotion();
+  const slide = reduceMotion ? 0 : 25;
 
   const buttonCopy: Record<ButtonState, ReactNode> = {
     idle: idleText,
@@ -115,9 +118,9 @@ export default function SmoothButton({
 
       {/* Outer Wrapper */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: reduceMotion ? 0 : 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
         className="flex justify-center p-4 w-full"
       >
 
@@ -126,7 +129,7 @@ export default function SmoothButton({
           type="button"
           aria-live="polite"
           aria-busy={buttonState === "loading"}
-          className="relative flex h-10 w-44 items-center justify-center overflow-hidden rounded-xl bg-[#1f6bff] px-4 text-[14px] font-medium tracking-[-0.005em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_1px_2px_rgba(16,24,40,0.12),0_4px_12px_-4px_rgba(31,107,255,0.45)] outline-none transition-[transform,background-color] duration-150 ease-out hover:bg-[#1a5fe6] active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-[#1f6bff]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-default dark:focus-visible:ring-offset-neutral-900"
+          className="relative flex h-10 w-44 items-center justify-center overflow-hidden rounded-full bg-[#1f6bff] px-4 text-[14px] font-medium tracking-[-0.005em] text-white outline-none transition-[transform,background-color] duration-150 ease-out hover:bg-[#1a5fe6] active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-[#1f6bff]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-default dark:focus-visible:ring-offset-neutral-900"
           disabled={buttonState === "loading"}
           onClick={startTransition}
         >
@@ -134,9 +137,9 @@ export default function SmoothButton({
             <motion.span
               className="flex w-full items-center justify-center gap-1.5 whitespace-nowrap"
               transition={{ type: "spring", ...spring }}
-              initial={{ opacity: 0, y: -25 }}
+              initial={{ opacity: 0, y: -slide }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 25 }}
+              exit={{ opacity: 0, y: slide }}
               key={buttonState}
             >
               {buttonCopy[buttonState]}

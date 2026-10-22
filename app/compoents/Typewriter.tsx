@@ -62,15 +62,20 @@ export default function Typewriter({
     return () => clearTimeout(timeout);
   }, [subIndex, index, reverse, typeSpeed, deleteSpeed, pauseDuration, word, words.length]);
 
+  // Like a real text caret: solid while characters change, blinking only while a phrase rests.
+  const resting = subIndex === word.length + 1 && !reverse;
+  const blink = resting && !reduceMotion;
+
   return (
-    <div className="flex items-center justify-center whitespace-pre font-mono text-2xl font-semibold tracking-tight text-neutral-900 dark:text-white">
-      <span aria-hidden className="mr-2 font-medium text-[#1f6bff]">{'>'}</span>
-      <span>{word.substring(0, subIndex)}</span>
+    <div className="flex items-center justify-center whitespace-pre text-2xl font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white">
+      <span className="sr-only">{word}</span>
+      <span aria-hidden>{word.substring(0, subIndex)}</span>
       <motion.span
         aria-hidden
-        animate={reduceMotion ? { opacity: 1 } : { opacity: [0, 1, 0] }}
-        transition={reduceMotion ? { duration: 0 } : { duration: 0.8, repeat: Infinity, ease: "linear" }}
-        className="ml-1 inline-block h-[1.1em] w-[2px] rounded-full bg-[#1f6bff]"
+        initial={false}
+        animate={blink ? { opacity: [1, 1, 0, 0, 1] } : { opacity: 1 }}
+        transition={blink ? { duration: 0.8, repeat: Infinity, ease: "linear", times: [0, 0.45, 0.55, 0.95, 1] } : { duration: 0 }}
+        className="ml-0.5 inline-block h-[1.1em] w-[2px] rounded-full bg-[#1f6bff]"
       />
     </div>
   );

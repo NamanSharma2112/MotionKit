@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useId } from "react";
-import { motion, useAnimate, transform } from "motion/react";
+import { motion, useAnimate, useReducedMotion, transform } from "motion/react";
 
 export default function CharacterCounter({
   trigger,
   maxLength = 12,
-  placeholder = "Type here...",
-  warningColor = "#ff008c",
+  placeholder = "Type here…",
+  warningColor = "#e5484d",
   stiffness = 700,
   damping = 80,
 }: {
@@ -25,12 +25,14 @@ export default function CharacterCounter({
   const counterId = useId();
 
   const [counterRef, animate] = useAnimate();
+  const reduceMotion = useReducedMotion();
 
-  // Neutral grey that reads on both light and dark surfaces.
-  const mapRemainingToColor = transform([2, 6], [warningColor, "#a3a3a3"]);
+  // Mid grey that clears 3:1 (large text) on both white and near-black fields.
+  const mapRemainingToColor = transform([2, 6], [warningColor, "#888888"]);
 
   useEffect(() => {
-    if (charactersRemaining > 6) return;
+    // Reduced motion: the colour still warns, the bump is skipped.
+    if (charactersRemaining > 6 || reduceMotion) return;
 
     const mapRemainingToSpringVelocity = transform([0, 5], [50, 0]);
 
@@ -44,7 +46,7 @@ export default function CharacterCounter({
         damping,
       }
     );
-  }, [charactersRemaining, animate, counterRef, stiffness, damping]);
+  }, [charactersRemaining, animate, counterRef, stiffness, damping, reduceMotion]);
 
   // Reset the field when the trigger prop changes (for the preview card)
   if (trigger !== prevTrigger) {
@@ -57,7 +59,8 @@ export default function CharacterCounter({
 
       {/* Input Field */}
       <input
-        className="relative w-[300px] rounded-2xl border border-black/10 bg-white p-5 pr-[70px] text-[32px] leading-none tracking-[-0.01em] text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_-6px_rgba(0,0,0,0.08)] outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-400 focus:border-[#1f6bff] focus:shadow-[0_0_0_4px_rgba(31,107,255,0.15)] dark:border-white/10 dark:bg-neutral-900 dark:text-white dark:shadow-none dark:placeholder:text-neutral-500 dark:focus:border-[#1f6bff] dark:focus:shadow-[0_0_0_4px_rgba(31,107,255,0.25)]"
+        // One elevation: a product border, no resting shadow. Focus swaps the border to the accent and adds a ring.
+        className="relative w-[300px] rounded-2xl border border-black/10 bg-white p-5 pr-[70px] text-[32px] leading-none tracking-[-0.01em] text-neutral-900 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-neutral-500 hover:border-black/20 focus:border-[#1f6bff] focus:shadow-[0_0_0_3px_rgba(31,107,255,0.2)] dark:border-white/10 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-400 dark:hover:border-white/20 dark:focus:border-[#1f6bff] dark:focus:shadow-[0_0_0_3px_rgba(31,107,255,0.3)]"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         maxLength={maxLength}
@@ -67,7 +70,8 @@ export default function CharacterCounter({
       />
 
       {/* Floating Counter Container */}
-      <div className="pointer-events-none absolute top-1/2 right-px flex h-[calc(100%-2px)] -translate-y-1/2 items-center justify-end rounded-r-[15px] bg-linear-to-r from-transparent from-0% to-white to-20% py-2.5 pr-5 pl-[50px] dark:to-neutral-900">
+      {/* The input's right padding keeps typed text clear of the count, so no fade is needed. */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-5">
 
         {/* Animated Number */}
         <motion.span
