@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Check, Copy, RotateCcw, SlidersHorizontal, Sparkles } from "lucide-react";
 import type { CatalogItem, Props } from "./catalog";
+import { PreviewSkeleton } from "../ui/Skeleton";
 import { aiPrompt, setActiveTweak, TweakBridge, useActiveTweak, usageSnippet } from "./tweak";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
@@ -76,6 +77,7 @@ export default function ShowcaseCard({ item, index }: { item: CatalogItem; index
       )}
 
       <div className="mk-card-preview">
+        {!near && <PreviewSkeleton />}
         {near && (
           <div
             key={replayKey}
