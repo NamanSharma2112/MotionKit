@@ -6,7 +6,6 @@
 
 ![MotionKit homepage](docs/images/hero.jpg)
 
-https://github.com/user-attachments/assets/3b8f7188-6380-4c8c-9b89-3109fd123367
 
 MotionKit is a free collection of 18 hand-tuned React animations and 7 browser playgrounds. It isn't a package you install: each component is a single file you copy into your project and own.
 
