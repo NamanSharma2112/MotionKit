@@ -21,6 +21,7 @@ const filesToRead = [
   'PlayPauseMorph.tsx',
   'GooeyDropdown.tsx',
   'Name.tsx',
+  'templates/WorkspaceDashboard.tsx',
 ];
 
 const variables = [
@@ -43,6 +44,7 @@ const variables = [
   'playPauseMorphCode',
   'gooeyDropdownCode',
   'nameCode',
+  'workspaceDashboardCode',
 ];
 
 let output = '// Auto-generated: source code strings for component copy-to-clipboard\n\n';
