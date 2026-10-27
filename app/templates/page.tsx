@@ -2,9 +2,10 @@
 
 
 import { editProfileCode } from "../compoents/EditProfileModalCode";
-import { appleAccordionCode } from "../compoents/componentCodes";
+import { appleAccordionCode, workspaceDashboardCode } from "../compoents/componentCodes";
 import EditProfileModal from "../compoents/EditProfileModal";
 import AppleAccordion from "../compoents/apple-accordion/AppleAccordion";
+import WorkspaceDashboard from "../compoents/templates/WorkspaceDashboard";
 import PageHeader from "../compoents/ui/PageHeader";
 import TemplateCard from "./TemplateCard";
 
@@ -17,6 +18,17 @@ export default function TemplatesPage() {
       />
 
       <div className="flex flex-col gap-6">
+        <TemplateCard
+          id="workspace-dashboard"
+          title="Workspace dashboard"
+          description="A calm project workspace where every control works: tick off tasks, create and invite from popovers, change project status and jump anywhere with the command palette (/ or ⌘K)."
+          code={workspaceDashboardCode}
+          tags={["framer-motion", "dashboard", "command palette"]}
+          previewClassName="items-stretch p-1.5 sm:p-2"
+        >
+          <WorkspaceDashboard />
+        </TemplateCard>
+
         <TemplateCard
           id="edit-profile"
           title="Edit profile modal"
